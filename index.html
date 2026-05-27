@@ -1,0 +1,2557 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Stepguard — See wear before it stops you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Tokens ---------- */
+  :root{
+    --bg: #04070c;
+    --bg-2: #070b12;
+    --surface: #0b1119;
+    --surface-2: #0f1722;
+    --line: rgba(255,255,255,.07);
+    --line-strong: rgba(255,255,255,.14);
+    --text: #E8EEF5;
+    --muted: #8493A8;
+    --dim: #5A6776;
+    --steel: #BCC8D6;
+    --accent: #1FA9F5;    /* logo blue */
+    --accent-2: #5BD0FF;  /* highlight */
+    --accent-deep: #0a4d77;
+    --laser: #FF2A2A;
+    --laser-glow: rgba(255,42,42,.6);
+    --ok: #38D38A;
+    --warn: #F5C24D;
+    --hot: #FF6A3D;
+    --maxw: 1280px;
+    --pad: clamp(20px, 4vw, 56px);
+    --display: "Space Grotesk", ui-sans-serif, system-ui;
+    --body: "Manrope", ui-sans-serif, system-ui;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--body);font-weight:400;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  img{max-width:100%;display:block}
+  ::selection{background:var(--accent);color:#000}
+
+  /* ---------- Atmosphere ---------- */
+  .bg-grid{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, #000 40%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, #000 40%, transparent 75%);
+    opacity:.55;
+  }
+  .bg-glow{
+    position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(900px 600px at 80% -10%, rgba(31,169,245,.18), transparent 60%),
+      radial-gradient(700px 500px at 0% 30%, rgba(31,169,245,.08), transparent 60%);
+  }
+
+  /* ---------- Language bar ---------- */
+  .langbar{
+    position: sticky; top: 0; z-index: 60;
+    background: #02050a;
+    border-bottom: 1px solid var(--line);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .langbar-inner{
+    max-width: var(--maxw); margin: 0 auto;
+    padding: 8px var(--pad);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .langbar-tag{
+    color: var(--dim);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .langbar-tag::before{
+    content: ""; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ok); box-shadow: 0 0 6px var(--ok);
+  }
+  .langbar-pick{ display: inline-flex; gap: 0; align-items: center; border: 1px solid var(--line-strong); border-radius: 999px; padding: 3px; background: rgba(255,255,255,.02); }
+  .langbar-pick button{
+    padding: 4px 12px; border-radius: 999px;
+    color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: .14em;
+    transition: background .2s, color .2s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .langbar-pick button .flag{
+    width: 18px; height: 12px;
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.12);
+    display: inline-block;
+    line-height: 0;
+  }
+  .langbar-pick button .flag svg{ display: block; width: 100%; height: 100%; }
+  .langbar-pick button:hover{ color: var(--text); }
+  .langbar-pick button.on{ background: var(--accent); color: #00111d; }
+  @media (max-width: 560px){
+    .langbar-tag{ display: none; }
+    .langbar-inner{ justify-content: center; }
+  }
+
+  /* ---------- Nav ---------- */
+  .nav{
+    position:sticky;top:33px;z-index:50;
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    background: rgba(4,7,12,.65);
+    border-bottom: 1px solid transparent;
+    transition: border-color .25s ease, background .25s ease;
+  }
+  .nav.scrolled{ border-bottom-color: var(--line); background: rgba(4,7,12,.85); }
+  .nav-inner{
+    max-width: var(--maxw); margin:0 auto;
+    display:flex;align-items:center;justify-content:space-between;
+    padding: 14px var(--pad);
+    gap:24px;
+  }
+  .brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;letter-spacing:-.01em}
+  .brand img{height:28px;width:auto;object-fit:contain}
+  .brand-mark{
+    height: 32px; width: 32px; border-radius: 8px;
+    background: #000;
+    display:grid;place-items:center;
+    border: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .brand-mark img{height: 100%; width: 100%; object-fit: cover; object-position: 20% center; transform: scale(2.2) translateX(-12%);}
+  .brand-name{font-size:18px}
+  .brand-name b{color:var(--accent)}
+  .nav-links{display:flex;gap:22px}
+  .nav-links a{font-size:14px;color:var(--steel);font-weight:500;letter-spacing:.01em;transition:color .15s;white-space:nowrap}
+  .nav-links a:hover{color:var(--text)}
+  .nav-cta{display:flex;gap:10px;align-items:center}
+  @media (max-width: 1100px){ .nav-links{display:none} }
+  @media (max-width: 560px){ .nav-cta .btn-ghost{display:none} }
+
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;
+    padding: 12px 18px;border-radius: 10px;
+    font-family: var(--display); font-weight:500; font-size:14px;
+    letter-spacing:.01em;
+    transition: transform .15s ease, background .2s ease, color .2s ease, border-color .2s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+  .btn-primary{
+    background: linear-gradient(180deg, #2BB8FF, #0E8AD2);
+    color: #00111d;
+    box-shadow: 0 0 0 1px rgba(91,208,255,.35) inset, 0 18px 40px -18px rgba(31,169,245,.7);
+  }
+  .btn-primary:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+  .btn-ghost{ color: var(--text); border-color: var(--line-strong); background: rgba(255,255,255,.02); }
+  .btn-ghost:hover{ border-color: var(--accent); color: var(--accent-2); }
+  .btn-arrow::after{ content:"→"; transition: transform .2s; }
+  .btn:hover .btn-arrow::after, .btn-arrow:hover::after{ transform: translateX(3px); }
+
+  /* ---------- Container ---------- */
+  .wrap{ max-width: var(--maxw); margin: 0 auto; padding: 0 var(--pad); position: relative; z-index: 1; }
+  section{ position: relative; z-index: 1; }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding: 56px 0 0; }
+  .hero-grid{
+    display:grid;grid-template-columns: 1.05fr .95fr;gap: 48px;align-items: center;
+    min-height: calc(100vh - 72px);
+  }
+  @media (max-width: 1024px){ .hero-grid{ grid-template-columns: 1fr; gap: 28px; min-height: auto; padding-bottom: 40px } }
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:10px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-2);
+    padding: 6px 12px; border-radius: 999px;
+    background: rgba(31,169,245,.08);
+    border: 1px solid rgba(31,169,245,.25);
+  }
+  .eyebrow .pulse{ width:6px;height:6px;border-radius:50%;background: var(--accent-2); box-shadow: 0 0 0 0 rgba(91,208,255,.6); animation: pulse 2s infinite }
+  @keyframes pulse{ 0%{box-shadow:0 0 0 0 rgba(91,208,255,.6)} 70%{box-shadow:0 0 0 10px rgba(91,208,255,0)} 100%{box-shadow:0 0 0 0 rgba(91,208,255,0)} }
+
+  h1.display{
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(44px, 6.2vw, 88px);
+    line-height: .98; letter-spacing: -.035em;
+    margin: 22px 0 0;
+    text-wrap: balance;
+  }
+  h1 .accent{
+    background: linear-gradient(180deg, #5BD0FF 0%, #1FA9F5 70%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  h1 .strike{ position: relative; white-space: nowrap; }
+  h1 .strike::after{
+    content:""; position: absolute; left: -2%; right: -2%; top: 56%; height: 6px;
+    background: var(--laser);
+    box-shadow: 0 0 22px var(--laser-glow);
+    transform: scaleX(0); transform-origin: left center;
+    animation: strike 1.4s .7s ease-out forwards;
+  }
+  @keyframes strike{ to{ transform: scaleX(1) } }
+
+  .lede{
+    margin-top: 26px;
+    font-size: clamp(16px, 1.25vw, 19px);
+    line-height: 1.55; color: var(--steel); max-width: 540px;
+  }
+  .hero-ctas{ display:flex; gap:14px; margin-top: 34px; flex-wrap: wrap; }
+
+  .hero-meta{
+    margin-top: 48px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 0;
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 18px 0;
+  }
+  .hero-meta .item{ padding: 0 18px; border-left: 1px solid var(--line); }
+  .hero-meta .item:first-child{ border-left: 0; padding-left: 0; }
+  .hero-meta .k{ font-family: var(--display); font-weight: 600; font-size: clamp(22px, 2.2vw, 32px); letter-spacing: -.02em; color: var(--text); }
+  .hero-meta .l{ font-size: 12px; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: .12em; font-family: var(--mono); }
+
+  /* Hero visual */
+  .hero-stage{
+    position: relative; aspect-ratio: 1 / 1.05;
+    border: 1px solid var(--line-strong);
+    background:
+      radial-gradient(60% 60% at 50% 40%, rgba(31,169,245,.10), transparent 70%),
+      linear-gradient(180deg, #08111c, #04070c 80%);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .hero-stage::before{
+    content:""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(ellipse at 50% 50%, #000, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000, transparent 75%);
+  }
+  .hero-stage .label{
+    position: absolute; top: 18px; left: 18px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--accent-2); text-transform: uppercase;
+    display:flex;align-items:center;gap:8px;
+  }
+  .hero-stage .label::before{ content:""; width:6px;height:6px;border-radius:50%;background:var(--accent-2); box-shadow:0 0 8px var(--accent-2); }
+  .hero-stage .label-r{
+    position: absolute; top: 18px; right: 18px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .2em; color: var(--muted); text-transform: uppercase;
+  }
+
+  /* The escalator scene */
+  .stage-svg{ position: absolute; inset: 0; width: 100%; height: 100%; }
+
+  /* Status panel overlay */
+  .hud{
+    position: absolute; bottom: 18px; left: 18px; right: 18px;
+    background: rgba(8,14,22,.7);
+    border: 1px solid var(--line);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px; align-items: center;
+  }
+  .hud-title{ font-family: var(--mono); font-size: 10px; letter-spacing: .18em; color: var(--muted); text-transform: uppercase }
+  .hud-status{ font-family: var(--display); font-weight: 600; font-size: 15px; margin-top: 4px; color: var(--text) }
+  .hud-status .dot{ display:inline-block; width:8px;height:8px;border-radius:50%; margin-right:8px; background: var(--ok); box-shadow:0 0 10px var(--ok); animation: blink 1.4s infinite; vertical-align: middle; transition: background .4s ease, box-shadow .4s ease;}
+  .hud[data-level="1"] .dot{ background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+  .hud[data-level="2"] .dot{ background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+  .hud[data-level="3"] .dot{ background: var(--hot); box-shadow: 0 0 12px var(--hot); }
+  @keyframes blink{ 50%{ opacity:.35 } }
+  .levels{ display:flex; gap: 6px; }
+  .levels .lv{ width: 26px; height: 26px; border-radius: 6px; border: 1px solid var(--line-strong); display:grid;place-items:center; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .levels .lv.on{ color: #00111d; }
+  .levels .lv.l1.on{ background: var(--ok); border-color: var(--ok); }
+  .levels .lv.l2.on{ background: var(--warn); border-color: var(--warn); }
+  .levels .lv.l3.on{ background: var(--hot); border-color: var(--hot); color: #fff; }
+  .levels .lv.l4.on{ background: var(--laser); border-color: var(--laser); color: #fff; box-shadow:0 0 12px var(--laser-glow) }
+
+  /* ---------- Ticker ---------- */
+  .ticker{
+    margin-top: 56px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    overflow: hidden; padding: 14px 0; background: var(--bg-2);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .ticker-track{
+    display:flex; gap: 56px; width: max-content;
+    animation: scroll 40s linear infinite;
+    font-family: var(--mono); font-size: 13px; letter-spacing: .04em; color: var(--steel);
+    white-space: nowrap;
+  }
+  .ticker-track span{ color: var(--accent-2); margin-right: 8px;}
+  @keyframes scroll{ from{transform: translateX(0)} to{transform: translateX(-50%)} }
+
+  /* ---------- Section heading ---------- */
+  .section{ padding: 120px 0; }
+  @media (max-width: 768px){ .section{ padding: 80px 0; } }
+  .section-eyebrow{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--accent-2); display:flex;align-items:center;gap:12px;
+  }
+  .section-eyebrow::before{ content:""; width: 28px; height:1px; background: var(--accent); }
+  h2.section-title{
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(34px, 4.4vw, 60px);
+    line-height: 1.02; letter-spacing: -.028em;
+    margin: 14px 0 0; max-width: 18ch; text-wrap: balance;
+  }
+  .section-lede{ color: var(--steel); margin-top: 22px; font-size: 17px; line-height: 1.55; max-width: 60ch; }
+
+  /* ---------- Problem strip ---------- */
+  .problem{
+    background: linear-gradient(180deg, #0a0d12 0%, #04070c 100%);
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 80px 0;
+  }
+  .quote{
+    display:grid; grid-template-columns: 1.1fr .9fr; gap: 64px; align-items: center;
+  }
+  @media(max-width:900px){.quote{grid-template-columns:1fr;gap:32px}}
+  .quote .headline{
+    font-family: var(--display); font-weight: 500;
+    font-size: clamp(28px, 3.2vw, 44px); line-height: 1.1; letter-spacing: -.022em;
+    text-wrap: balance;
+  }
+  .quote .headline em{ font-style: normal; color: var(--accent-2); }
+  .quote .source{ margin-top: 18px; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+  .news-card{
+    border: 1px solid var(--line); border-radius: 14px; padding: 22px; background: var(--surface);
+    position: relative; overflow: hidden;
+  }
+  .news-card::before{
+    content:""; position: absolute; left:0; top:0; bottom:0; width:3px; background: var(--laser); box-shadow: 0 0 20px var(--laser-glow);
+  }
+  .news-card .date{ font-family: var(--mono); font-size: 11px; color: var(--laser); letter-spacing: .12em; text-transform: uppercase; }
+  .news-card h4{ font-family: var(--display); font-weight: 600; margin: 10px 0 8px; font-size: 22px; letter-spacing: -.01em;}
+  .news-card p{ color: var(--steel); line-height: 1.5; font-size: 14px; }
+  .news-card .src{ margin-top: 14px; color: var(--dim); font-family: var(--mono); font-size: 11px; }
+
+  /* ---------- How it works ---------- */
+  .grid-4{
+    display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 16px; margin-top: 56px;
+  }
+  @media(max-width:1024px){ .grid-4{ grid-template-columns: repeat(2,1fr) }}
+  @media(max-width:560px){ .grid-4{ grid-template-columns: 1fr }}
+  .feature{
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: linear-gradient(180deg, var(--surface), var(--bg-2));
+    position: relative;
+    transition: transform .25s ease, border-color .2s, background .2s;
+    min-height: 280px;
+    display:flex;flex-direction:column;
+  }
+  .feature:hover{ transform: translateY(-3px); border-color: var(--line-strong); }
+  .feature .num{
+    font-family: var(--mono); font-size: 11px; color: var(--accent-2); letter-spacing: .2em;
+    display:flex; justify-content: space-between; align-items: center;
+  }
+  .feature .num .ico{ width: 32px; height: 32px; border-radius: 8px; background: rgba(31,169,245,.08); border: 1px solid rgba(31,169,245,.2); display:grid;place-items:center; color: var(--accent-2); }
+  .feature h3{ font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -.015em; margin: 22px 0 10px; line-height: 1.1; }
+  .feature p{ color: var(--steel); font-size: 14px; line-height: 1.55; margin: 0;}
+  .feature .spec{ margin-top: auto; padding-top: 18px; border-top: 1px dashed var(--line); display:flex; gap: 14px; flex-wrap: wrap;}
+  .feature .spec span{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em; }
+
+  /* ---------- Platform preview (interactive) ---------- */
+  .platform{
+    background: linear-gradient(180deg, #04070c 0%, #060a12 100%);
+    border-top: 1px solid var(--line);
+    padding: 120px 0;
+  }
+  .platform-shell{
+    margin-top: 56px;
+    border: 1px solid var(--line-strong);
+    border-radius: 16px;
+    background: var(--surface);
+    overflow: hidden;
+    box-shadow: 0 60px 120px -40px rgba(0,0,0,.6), 0 0 0 1px rgba(31,169,245,.06);
+    position: relative;
+  }
+  /* App top bar */
+  .pf-top{
+    display:flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(8,12,18,.7);
+    position: relative;
+    z-index: 2;
+  }
+  .pf-top .pf-brand{ display:flex; align-items: center; gap: 8px; font-family: var(--display); font-weight: 600; font-size: 13px; letter-spacing: -.01em; padding-right: 12px; border-right: 1px solid var(--line); color: var(--text);}
+  .pf-top .pf-brand b{ color: var(--accent);}
+  .pf-top .pf-brand .mk{ height: 22px; width: 22px; border-radius: 5px; background: #000; overflow: hidden; border: 1px solid var(--line); display: grid; place-items: center;}
+  .pf-top .pf-brand .mk img{ height: 100%; width: 100%; object-fit: cover; transform: scale(2.2) translateX(-12%); object-position: 20% center;}
+  .pf-crumb{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em;}
+  .pf-crumb b{ color: var(--steel); font-weight: 500;}
+  .pf-search{ margin-left: auto; max-width: 280px; width: 100%; position: relative;}
+  .pf-search input{ width: 100%; padding: 8px 12px 8px 32px; background: rgba(255,255,255,.025); border: 1px solid var(--line); border-radius: 8px; color: var(--text); font: 400 13px var(--body); outline: none; transition: border-color .15s, background .15s;}
+  .pf-search input::placeholder{ color: var(--dim);}
+  .pf-search input:focus{ border-color: var(--accent); background: rgba(31,169,245,.04);}
+  .pf-search svg{ position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted);}
+  .pf-lang{ display:flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden;}
+  .pf-lang button{ padding: 7px 10px; font-family: var(--mono); font-size: 11px; color: var(--muted); border-right: 1px solid var(--line); transition: color .15s, background .15s; cursor: pointer; font-weight: 500;}
+  .pf-lang button:last-child{ border-right: 0;}
+  .pf-lang button.on{ color: var(--accent-2); background: rgba(31,169,245,.08);}
+  .pf-lang button:hover:not(.on){ color: var(--steel);}
+  .pf-bell{ position: relative; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 8px; display:grid; place-items: center; color: var(--steel); cursor: pointer; transition: border-color .15s, color .15s; background: transparent;}
+  .pf-bell:hover{ border-color: var(--accent); color: var(--accent-2);}
+  .pf-bell .count{ position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--laser); color: #fff; font-family: var(--mono); font-size: 9px; display:grid; place-items: center; font-weight: 700; border: 2px solid var(--surface);}
+  .pf-avatar{ width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #1FA9F5, #5BD0FF); display:grid; place-items: center; font-family: var(--display); font-weight: 600; color: #00111d; font-size: 12px; cursor: pointer;}
+
+  @media(max-width: 760px){
+    .pf-search{ display: none}
+    .pf-crumb{ display: none}
+  }
+
+  /* Body grid */
+  .pf-body{
+    display:grid; grid-template-columns: 232px 1fr; min-height: 720px;
+    background: linear-gradient(180deg, #06090f, #04070c);
+    position: relative;
+  }
+  @media(max-width: 900px){ .pf-body{ grid-template-columns: 1fr; min-height: 600px}}
+
+  /* Sidebar */
+  .pf-side{
+    border-right: 1px solid var(--line);
+    padding: 12px 10px;
+    display:flex; flex-direction: column; gap: 2px;
+    background: rgba(255,255,255,.012);
+  }
+  .pf-side .grp{ font-family: var(--mono); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--dim); padding: 14px 10px 8px;}
+  .pf-side .grp:first-child{ padding-top: 6px;}
+  .pf-nav{ padding: 9px 10px; border-radius: 8px; font-size: 13px; color: var(--steel); display:flex; align-items: center; gap: 10px; cursor: pointer; transition: color .15s, background .15s; border: 1px solid transparent; background: transparent; text-align: left; width: 100%;}
+  .pf-nav:hover{ background: rgba(255,255,255,.03); color: var(--text);}
+  .pf-nav.active{ background: rgba(31,169,245,.08); color: var(--accent-2); border-color: rgba(31,169,245,.18);}
+  .pf-nav svg{ width: 16px; height: 16px; flex-shrink: 0; opacity: .9;}
+  .pf-nav .badge{ margin-left: auto; padding: 1px 6px; border-radius: 999px; font-family: var(--mono); font-size: 10px; background: rgba(255,42,42,.15); color: var(--laser); font-weight: 600; display: inline-block; min-height: 0; flex-direction: row;}
+  .pf-side .pf-foot{ padding: 12px 10px; border-top: 1px solid var(--line); margin-top: auto; font-family: var(--mono); font-size: 10px; color: var(--dim); letter-spacing: .1em; display:flex; align-items: center; gap: 8px;}
+  .pf-side .pf-foot .dot{ width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok);}
+
+  @media(max-width: 900px){
+    .pf-side{ border-right: 0; border-bottom: 1px solid var(--line); flex-direction: row; overflow-x: auto; padding: 8px; gap: 4px;}
+    .pf-side .grp{ display: none;}
+    .pf-side .pf-foot{ display: none;}
+    .pf-nav{ white-space: nowrap; padding: 8px 12px;}
+  }
+
+  /* Main */
+  .pf-main{ padding: 28px 32px; min-width: 0; overflow: hidden;}
+  @media(max-width:760px){ .pf-main{ padding: 20px 16px;}}
+
+  .pf-page-head{ display:flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 14px;}
+  .pf-page-head h4{ font-family: var(--display); font-weight: 600; font-size: 24px; margin: 0; letter-spacing: -.02em; color: var(--text);}
+  .pf-page-head .sub{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .12em; text-transform: uppercase; margin-top: 6px;}
+  .pf-page-head .actions{ display: flex; gap: 8px; flex-wrap: wrap;}
+  .btnx{
+    display:inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: 8px;
+    font: 500 13px var(--display); letter-spacing: .005em;
+    border: 1px solid var(--line); color: var(--steel); background: transparent;
+    cursor: pointer; transition: all .15s;
+    white-space: nowrap;
+  }
+  .btnx:hover{ border-color: var(--accent); color: var(--accent-2);}
+  .btnx.primary{ background: linear-gradient(180deg, #2BB8FF, #0E8AD2); color: #00111d; border-color: transparent; box-shadow: 0 0 0 1px rgba(91,208,255,.35) inset, 0 12px 28px -16px rgba(31,169,245,.6);}
+  .btnx.primary:hover{ filter: brightness(1.05); color: #00111d; transform: translateY(-1px);}
+  .btnx.danger{ color: var(--laser); border-color: rgba(255,42,42,.4);}
+  .btnx.danger:hover{ background: rgba(255,42,42,.08); color: #fff;}
+
+  .kpis{ display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 22px;}
+  @media(max-width: 760px){ .kpis{ grid-template-columns: repeat(2,1fr);}}
+  .kpi{ border: 1px solid var(--line); border-radius: 10px; padding: 16px; background: linear-gradient(180deg, rgba(255,255,255,.014), rgba(255,255,255,.005)); transition: border-color .15s, transform .15s; cursor: pointer;}
+  .kpi:hover{ border-color: var(--line-strong); transform: translateY(-2px);}
+  .kpi .l{ font-size: 11px; color: var(--muted); font-family: var(--mono); letter-spacing: .12em; text-transform: uppercase;}
+  .kpi .v{ font-family: var(--display); font-weight: 600; font-size: 28px; letter-spacing: -.015em; margin-top: 6px; color: var(--text);}
+  .kpi .d{ font-size: 12px; color: var(--ok); margin-top: 4px; font-family: var(--mono);}
+  .kpi .d.bad{ color: var(--hot);}
+  .kpi .d.warn{ color: var(--warn);}
+
+  .pf-row{ display:grid; grid-template-columns: 1.4fr 1fr; gap: 18px; margin-top: 18px;}
+  @media(max-width: 900px){ .pf-row{ grid-template-columns: 1fr;}}
+  .pf-row.evens{ grid-template-columns: 1fr 1fr;}
+  @media(max-width: 900px){ .pf-row.evens{ grid-template-columns: 1fr;}}
+  .pf-panel{ border: 1px solid var(--line); border-radius: 12px; padding: 18px; background: rgba(255,255,255,.012);}
+  .pf-panel h5{ font-family: var(--display); font-weight: 600; font-size: 14px; margin: 0 0 12px; color: var(--text); display:flex; justify-content: space-between; align-items: center; letter-spacing: -.005em;}
+  .pf-panel h5 .more{ font-family: var(--mono); font-size: 10px; color: var(--accent-2); letter-spacing: .12em; cursor: pointer; background: transparent; border: 0; padding: 0;}
+  .pf-panel h5 .more:hover{ color: #fff;}
+  .pf-panel .sub{ font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; margin-bottom: 14px;}
+
+  /* Map */
+  .map{
+    position: relative; height: 280px;
+    background:
+      radial-gradient(circle at 30% 60%, rgba(31,169,245,.10), transparent 35%),
+      radial-gradient(circle at 70% 40%, rgba(31,169,245,.07), transparent 38%),
+      #060a12;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .map svg{ position: absolute; inset: 0; width: 100%; height: 100%;}
+  .pin{ position: absolute; width: 12px; height: 12px; border-radius: 50%; transform: translate(-50%, -50%); cursor: pointer; z-index: 2;}
+  .pin::before{ content:""; position: absolute; inset:0; border-radius:50%; background: currentColor;}
+  .pin::after{ content:""; position: absolute; inset:-8px; border-radius:50%; border:1px solid currentColor; opacity:.5; animation: ping 2.4s infinite ease-out;}
+  @keyframes ping{ 0%{transform:scale(.5);opacity:.6} 100%{transform:scale(1.4);opacity:0} }
+  .pin:hover{ transform: translate(-50%, -50%) scale(1.3);}
+  .pin.green{ color: var(--ok);}
+  .pin.amber{ color: var(--warn);}
+  .pin.red{ color: var(--laser);}
+  .pin .lab{ position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); font-family: var(--mono); font-size: 10px; white-space: nowrap; padding: 4px 8px; background: rgba(0,0,0,.85); border: 1px solid var(--line-strong); border-radius: 4px; color: var(--text); opacity: 0; pointer-events: none; transition: opacity .15s; letter-spacing: .06em;}
+  .pin:hover .lab{ opacity: 1;}
+
+  /* Alarm row */
+  .alarm{ display:flex; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); margin-bottom: 8px; background: rgba(255,255,255,.012); cursor: pointer; transition: border-color .15s, background .15s;}
+  .alarm:hover{ border-color: var(--line-strong); background: rgba(255,255,255,.024);}
+  .alarm:last-child{ margin-bottom: 0;}
+  .alarm .lvl{ width: 30px; height: 30px; border-radius: 7px; display:grid; place-items: center; font-family: var(--mono); font-size: 12px; flex-shrink: 0; font-weight: 700;}
+  .alarm .lvl.l1{ background: rgba(56,211,138,.12); color: var(--ok); border: 1px solid rgba(56,211,138,.3);}
+  .alarm .lvl.l2{ background: rgba(245,194,77,.12); color: var(--warn); border: 1px solid rgba(245,194,77,.3);}
+  .alarm .lvl.l3{ background: rgba(255,106,61,.14); color: var(--hot); border: 1px solid rgba(255,106,61,.3);}
+  .alarm .lvl.l4{ background: rgba(255,42,42,.18); color: #fff; border: 1px solid var(--laser); box-shadow: 0 0 10px var(--laser-glow);}
+  .alarm .meta{ flex: 1; min-width: 0;}
+  .alarm .title{ font-size: 13px; color: var(--text); font-weight: 500;}
+  .alarm .sub{ font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: .06em;}
+  .alarm .time{ font-family: var(--mono); font-size: 10px; color: var(--dim); align-self: center; flex-shrink: 0;}
+  .alarm .arrow{ color: var(--dim); align-self: center; flex-shrink: 0; transition: color .15s, transform .15s; padding-left: 4px;}
+  .alarm:hover .arrow{ color: var(--accent-2); transform: translateX(2px);}
+
+  /* Bars chart */
+  .bars{ display:flex; align-items: end; gap: 6px; height: 140px; padding-top: 10px;}
+  .bars .bar{ flex: 1; background: linear-gradient(180deg, var(--accent-2), var(--accent)); border-radius: 3px 3px 0 0; opacity: .8; transition: opacity .2s; cursor: pointer; position: relative; min-height: 4px;}
+  .bars .bar:hover{ opacity: 1;}
+  .bars .bar.dim{ background: linear-gradient(180deg, #2a3a4d, #1a2433);}
+  .bars-x{ display:flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 8px; letter-spacing: .06em;}
+
+  /* Filter chips */
+  .chips{ display:flex; gap: 8px; margin-top: 18px; flex-wrap: wrap;}
+  .chip{
+    display:inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line); background: transparent;
+    font: 500 12px var(--mono); letter-spacing: .04em; color: var(--steel);
+    cursor: pointer; transition: all .15s;
+  }
+  .chip:hover{ border-color: var(--line-strong); color: var(--text);}
+  .chip.on{ background: rgba(31,169,245,.1); border-color: rgba(31,169,245,.4); color: var(--accent-2);}
+  .chip .dot{ width: 6px; height: 6px; border-radius: 50%; background: var(--muted);}
+  .chip.l1 .dot{ background: var(--ok);}
+  .chip.l2 .dot{ background: var(--warn);}
+  .chip.l3 .dot{ background: var(--hot);}
+  .chip.l4 .dot{ background: var(--laser);}
+  .chip .ct{ font-size: 10px; color: var(--muted); padding-left: 4px; border-left: 1px solid currentColor; margin-left: 2px;}
+
+  /* Tables */
+  .tablex{ margin-top: 18px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,.012);}
+  .tablex .row{ display: grid; gap: 12px; padding: 14px 16px; align-items: center; border-bottom: 1px solid var(--line); font-size: 13px; transition: background .15s; cursor: pointer; color: var(--steel);}
+  .tablex .row:last-child{ border-bottom: 0;}
+  .tablex .row.head{ background: rgba(255,255,255,.025); cursor: default; padding: 10px 16px;}
+  .tablex .row.head > div{ font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase;}
+  .tablex .row:not(.head):hover{ background: rgba(31,169,245,.04);}
+  .tablex .row .name{ color: var(--text); font-weight: 500;}
+  .tablex .row .id{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em;}
+  .tablex .row .num{ font-family: var(--mono); color: var(--steel);}
+  .tablex .row .status{ display:flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 11px; color: var(--muted);}
+  .tablex .row .status .pd{ width: 8px; height: 8px; border-radius: 50%;}
+  .tablex .row .arrow{ color: var(--dim); transition: color .15s, transform .15s; text-align: right;}
+  .tablex .row:not(.head):hover .arrow{ color: var(--accent-2); transform: translateX(2px);}
+  .tablex.locations .row{ grid-template-columns: 1.6fr .8fr .7fr 1fr .3fr;}
+  .tablex.updates .row{ grid-template-columns: .9fr 1.8fr 1fr .8fr .3fr;}
+  .tablex .empty{ padding: 40px 20px; text-align: center; color: var(--muted); font-family: var(--mono); font-size: 12px; letter-spacing: .08em;}
+  @media(max-width: 760px){
+    .tablex .row.head{ display:none;}
+    .tablex.locations .row, .tablex.updates .row{ grid-template-columns: 1fr 1fr;}
+  }
+
+  /* Customer cards */
+  .cust-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 18px;}
+  @media(max-width: 900px){ .cust-grid{ grid-template-columns: repeat(2,1fr);}}
+  @media(max-width: 560px){ .cust-grid{ grid-template-columns: 1fr;}}
+  .cust{ padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.012); cursor: pointer; transition: border-color .15s, transform .15s;}
+  .cust:hover{ border-color: var(--accent); transform: translateY(-2px);}
+  .cust .head{ display:flex; justify-content: space-between; align-items: flex-start; gap: 10px;}
+  .cust .logo{ width: 42px; height: 42px; border-radius: 8px; background: rgba(31,169,245,.08); display:grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--accent-2); letter-spacing: -.01em; border: 1px solid rgba(31,169,245,.18);}
+  .cust .pill{ font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: .14em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid var(--line);}
+  .cust .pill.active{ color: var(--ok); border-color: rgba(56,211,138,.3); background: rgba(56,211,138,.06);}
+  .cust .pill.pilot{ color: var(--accent-2); border-color: rgba(31,169,245,.3); background: rgba(31,169,245,.06);}
+  .cust .name{ font-family: var(--display); font-weight: 600; font-size: 16px; margin: 14px 0 4px; letter-spacing: -.01em; color: var(--text);}
+  .cust .geo{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .06em;}
+  .cust .stats{ display:flex; gap: 14px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 11px;}
+  .cust .stats > div{ color: var(--muted); letter-spacing: .06em;}
+  .cust .stats > div b{ display: block; font-family: var(--display); font-weight: 600; color: var(--text); font-size: 16px; margin-bottom: 2px; letter-spacing: -.015em;}
+
+  /* Timeline */
+  .timeline{ margin-top: 18px; position: relative; padding-left: 22px;}
+  .timeline::before{ content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 1px; background: var(--line);}
+  .tl-item{ position: relative; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,.012); transition: border-color .15s, transform .15s; cursor: pointer;}
+  .tl-item:hover{ border-color: var(--line-strong); transform: translateX(2px);}
+  .tl-item::before{ content: ""; position: absolute; left: -20px; top: 18px; width: 9px; height: 9px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 0 3px rgba(31,169,245,.18);}
+  .tl-item .when{ font-family: var(--mono); font-size: 10px; color: var(--accent-2); letter-spacing: .12em; text-transform: uppercase;}
+  .tl-item .what{ font-size: 14px; color: var(--text); margin-top: 4px; font-weight: 500;}
+  .tl-item .where{ font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: .06em;}
+  .tl-item.firmware::before{ background: var(--ok); box-shadow: 0 0 0 3px rgba(56,211,138,.18);}
+  .tl-item.firmware .when{ color: var(--ok);}
+  .tl-item.ai::before{ background: var(--accent-2);}
+  .tl-item.calib::before{ background: var(--warn); box-shadow: 0 0 0 3px rgba(245,194,77,.18);}
+  .tl-item.calib .when{ color: var(--warn);}
+  .tl-item.incident::before{ background: var(--laser); box-shadow: 0 0 0 3px rgba(255,42,42,.18);}
+  .tl-item.incident .when{ color: var(--laser);}
+
+  /* Settings */
+  .settings{ margin-top: 18px; display:flex; flex-direction: column; gap: 14px;}
+  .setting{ padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: rgba(255,255,255,.012);}
+  .setting .srow{ display:flex; align-items: flex-start; justify-content: space-between; gap: 16px;}
+  .setting label{ font-family: var(--display); font-weight: 600; font-size: 14px; color: var(--text); letter-spacing: -.005em;}
+  .setting .desc{ font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.5; max-width: 56ch;}
+  .setting .toggle{ position: relative; width: 44px; height: 24px; border-radius: 999px; background: rgba(255,255,255,.08); cursor: pointer; transition: background .2s; flex-shrink: 0; border: 1px solid var(--line);}
+  .setting .toggle.on{ background: rgba(31,169,245,.4); border-color: rgba(31,169,245,.5);}
+  .setting .toggle::after{ content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s;}
+  .setting .toggle.on::after{ transform: translateX(20px);}
+  .setting input[type=range]{ width: 100%; accent-color: var(--accent); margin-top: 12px;}
+  .setting .slider-row{ display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; margin-top: 4px;}
+  .setting .slider-row .val{ font-family: var(--mono); font-size: 16px; color: var(--accent-2); min-width: 60px; text-align: right;}
+  .setting .lang-pick{ display:flex; gap: 8px; flex-shrink: 0;}
+  .setting .lang-pick button{ padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--steel); cursor: pointer; font: 500 12px var(--mono); letter-spacing: .08em;}
+  .setting .lang-pick button.on{ border-color: rgba(31,169,245,.5); background: rgba(31,169,245,.08); color: var(--accent-2);}
+
+  /* Notification popup */
+  .notif-pop{
+    position: absolute; top: 50px; right: 76px;
+    width: 320px;
+    background: var(--surface-2);
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.7);
+    z-index: 15;
+    overflow: hidden;
+    transform: translateY(-4px) scale(.97);
+    opacity: 0; pointer-events: none; transition: all .18s;
+  }
+  .notif-pop.on{ opacity: 1; transform: none; pointer-events: auto;}
+  .notif-pop h6{ margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); font: 600 13px var(--display); display:flex; justify-content: space-between; align-items: center;}
+  .notif-pop h6 span{ font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: .14em; font-weight: 400;}
+  .notif-pop .it{ padding: 12px 16px; border-bottom: 1px solid var(--line); display:flex; gap: 10px; cursor: pointer;}
+  .notif-pop .it:last-child{ border-bottom: 0;}
+  .notif-pop .it:hover{ background: rgba(255,255,255,.025);}
+  .notif-pop .it .lvl{ width: 24px; height: 24px; border-radius: 6px; display:grid; place-items: center; font-family: var(--mono); font-size: 10px; font-weight: 700; flex-shrink: 0;}
+  .notif-pop .it.l4 .lvl{ background: rgba(255,42,42,.18); color: #fff; border: 1px solid var(--laser);}
+  .notif-pop .it.l3 .lvl{ background: rgba(255,106,61,.14); color: var(--hot); border: 1px solid rgba(255,106,61,.3);}
+  .notif-pop .it.l2 .lvl{ background: rgba(245,194,77,.12); color: var(--warn); border: 1px solid rgba(245,194,77,.3);}
+  .notif-pop .it .t{ font-size: 12px; color: var(--text); font-weight: 500; line-height: 1.4;}
+  .notif-pop .it .s{ font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 3px; letter-spacing: .06em;}
+
+  /* Detail drawer */
+  .drawer-bg{ position: absolute; inset: 0; background: rgba(0,0,0,.55); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 10;}
+  .drawer-bg.on{ opacity: 1; pointer-events: auto;}
+  .drawer{ position: absolute; top: 0; right: 0; bottom: 0; width: min(460px, 92%); background: var(--surface-2); border-left: 1px solid var(--line-strong); transform: translateX(100%); transition: transform .25s ease; z-index: 11; display:flex; flex-direction: column; overflow-y: auto;}
+  .drawer.on{ transform: none;}
+  .drawer .dh{ padding: 16px 20px; border-bottom: 1px solid var(--line); display:flex; justify-content: space-between; align-items: center; position: sticky; top: 0; background: var(--surface-2); z-index: 2;}
+  .drawer .dh h5{ margin: 0; font: 600 16px var(--display); letter-spacing: -.01em;}
+  .drawer .dh .close{ width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--line); color: var(--steel); display:grid; place-items: center; cursor: pointer; background: transparent;}
+  .drawer .dh .close:hover{ color: var(--text); border-color: var(--line-strong);}
+  .drawer .db{ padding: 20px; flex: 1;}
+  .drawer .cam{ aspect-ratio: 16/9; border-radius: 10px; border: 1px solid var(--line); background: linear-gradient(180deg, #0a1118, #060a12), radial-gradient(circle at 50% 50%, rgba(255,42,42,.06), transparent 50%); position: relative; overflow: hidden; margin-bottom: 16px;}
+  .drawer .cam::before{ content: ""; position: absolute; inset: 0; background-image: linear-gradient(rgba(31,169,245,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(31,169,245,.06) 1px, transparent 1px); background-size: 24px 24px;}
+  .drawer .cam .step{ position: absolute; left: 28%; top: 38%; right: 28%; bottom: 32%; border: 1.5px solid var(--laser); border-radius: 4px; box-shadow: 0 0 14px var(--laser-glow);}
+  .drawer .cam .step::before{ content: "TREAD WEAR"; position: absolute; top: -20px; left: 0; font: 700 9px var(--mono); color: var(--laser); letter-spacing: .14em;}
+  .drawer .cam .corner{ position: absolute; padding: 6px 10px; font: 600 9px var(--mono); letter-spacing: .15em; color: var(--accent-2);}
+  .drawer .cam .tl{ top: 8px; left: 8px;}
+  .drawer .cam .tr{ top: 8px; right: 8px; color: var(--laser);}
+  .drawer .cam .bl{ bottom: 8px; left: 8px; color: var(--muted);}
+  .drawer .cam .br{ bottom: 8px; right: 8px; color: var(--muted);}
+  .drawer .dl{ list-style: none; padding: 0; margin: 0;}
+  .drawer .dl li{ display:flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; gap: 16px;}
+  .drawer .dl li:last-child{ border-bottom: 0;}
+  .drawer .dl li .k{ color: var(--muted); font-family: var(--mono); font-size: 11px; letter-spacing: .08em;}
+  .drawer .dl li .v{ color: var(--text); font-weight: 500; text-align: right; font-family: var(--body);}
+  .drawer .dl li .v.mono{ font-family: var(--mono); font-size: 12px;}
+  .drawer .da{ margin-top: 18px; display:flex; gap: 8px; flex-wrap: wrap;}
+
+  /* Toast */
+  .toast{
+    position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: var(--surface-2); border: 1px solid var(--accent);
+    padding: 10px 18px; border-radius: 10px;
+    font: 500 13px var(--display);
+    color: var(--text);
+    z-index: 20;
+    opacity: 0; pointer-events: none; transition: all .25s;
+    box-shadow: 0 16px 40px -10px rgba(0,0,0,.6), 0 0 0 1px rgba(31,169,245,.2);
+    display:flex; align-items: center; gap: 10px;
+    white-space: nowrap;
+  }
+  .toast.on{ opacity: 1; transform: translateX(-50%);}
+  .toast .dot{ width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 10px var(--accent-2);}
+
+  /* SDG tiles */
+  .sdg-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px;}
+  .sdg{ aspect-ratio: 1; border: 1px solid var(--line); border-radius: 8px; display:grid; place-items: center; font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--accent-2); background: rgba(31,169,245,.04); cursor: pointer; transition: all .15s; letter-spacing: -.02em;}
+  .sdg:hover{ background: rgba(31,169,245,.1); transform: scale(1.04);}
+
+  /* ---------- Industries ---------- */
+  .industries{ padding: 120px 0; }
+  .industry-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 56px;}
+  @media(max-width:1024px){.industry-grid{ grid-template-columns: repeat(2,1fr)}}
+  @media(max-width:560px){.industry-grid{ grid-template-columns: 1fr }}
+  .ind-card{
+    padding: 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+    aspect-ratio: 4/5; display:flex; flex-direction: column; justify-content: space-between;
+    overflow: hidden; position: relative; transition: border-color .25s;
+  }
+  .ind-card:hover{ border-color: var(--accent);}
+  .ind-card .top{ display:flex; justify-content: space-between; align-items: start; }
+  .ind-card .num{ font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: .12em;}
+  .ind-card .ill{ height: 80px; opacity: .9; color: var(--accent-2); }
+  .ind-card h4{ font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -.012em; margin: 0 0 6px;}
+  .ind-card .desc{ color: var(--steel); font-size: 13px; line-height: 1.55;}
+  .ind-card .tag{ font-family: var(--mono); font-size: 11px; color: var(--accent-2); margin-top: 14px; letter-spacing: .08em;}
+
+  /* ---------- ROI ---------- */
+  .roi{
+    background:
+      radial-gradient(80% 80% at 80% 50%, rgba(31,169,245,.08), transparent 60%),
+      linear-gradient(180deg, #050810, #04070c);
+    border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    padding: 120px 0;
+  }
+  .roi-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;}
+  @media(max-width:900px){.roi-grid{grid-template-columns:1fr; gap: 40px}}
+  .compare{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  }
+  .col{
+    padding: 28px; border-radius: 14px; border: 1px solid var(--line);
+    background: var(--surface);
+    position: relative;
+  }
+  .col.good{ background: linear-gradient(180deg, rgba(31,169,245,.06), rgba(255,255,255,.01)); border-color: rgba(31,169,245,.3);}
+  .col .tag{ font-family: var(--mono); font-size: 10px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase;}
+  .col.good .tag{ color: var(--accent-2);}
+  .col .price{ font-family: var(--display); font-weight: 600; font-size: 44px; letter-spacing: -.025em; margin: 14px 0 4px;}
+  .col.good .price{ color: var(--accent-2);}
+  .col .sub{ color: var(--muted); font-size: 13px;}
+  .col .li{ margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--steel); font-size: 13px;}
+  .col .li span{ display:flex;gap:8px; padding: 4px 0; align-items: center;}
+  .col .li .mk{ color: var(--accent-2); font-family: var(--mono); font-size: 10px; width: 14px; flex-shrink: 0;}
+  .col.bad .li .mk{ color: var(--hot); }
+
+  /* ---------- Compliance ---------- */
+  .compliance{ padding: 120px 0; }
+  .badges{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 56px;}
+  @media(max-width:760px){.badges{grid-template-columns: repeat(2,1fr)}}
+  .badge{
+    padding: 22px; border: 1px solid var(--line); border-radius: 12px;
+    background: var(--surface);
+    display:flex; flex-direction: column; gap: 8px; min-height: 160px;
+  }
+  .badge .code{ font-family: var(--mono); font-size: 10px; color: var(--accent-2); letter-spacing: .14em;}
+  .badge .name{ font-family: var(--display); font-weight: 600; font-size: 18px; letter-spacing: -.01em;}
+  .badge .d{ color: var(--steel); font-size: 13px; line-height: 1.5; margin-top: auto;}
+
+  /* ---------- Sustainability ---------- */
+  .sustain{ padding: 120px 0; border-top: 1px solid var(--line); background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);}
+  .sdg-strip{
+    margin-top: 56px;
+    display:grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  }
+  @media(max-width: 900px){ .sdg-strip{ grid-template-columns: repeat(3, 1fr); }}
+  @media(max-width: 520px){ .sdg-strip{ grid-template-columns: repeat(2, 1fr); }}
+  .sdg-tile{
+    position: relative;
+    aspect-ratio: 1/1;
+    border-radius: 14px;
+    background: var(--sdg);
+    color: #fff;
+    padding: 14px;
+    display:flex; flex-direction: column; justify-content: space-between;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .sdg-tile::after{
+    content:""; position: absolute; inset:0; background: linear-gradient(160deg, rgba(255,255,255,.12), transparent 60%);
+    pointer-events: none;
+  }
+  .sdg-tile .num{
+    font-family: var(--display); font-weight: 700;
+    font-size: clamp(36px, 4.4vw, 64px); line-height: .95; letter-spacing: -.04em;
+  }
+  .sdg-tile .ttl{
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; line-height: 1.3;
+    opacity: .95;
+  }
+
+  .sustain-grid{
+    margin-top: 28px;
+    display:grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  }
+  @media(max-width: 760px){ .sustain-grid{ grid-template-columns: 1fr; }}
+  .sustain-card{
+    display:block; text-decoration: none; color: inherit;
+    padding: 26px 28px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: linear-gradient(180deg, rgba(255,255,255,.012), transparent);
+    transition: border-color .2s, transform .25s, background .2s;
+    cursor: pointer;
+  }
+  .sustain-card:hover{
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    background: linear-gradient(180deg, rgba(31,169,245,.03), transparent);
+  }
+  .sustain-card .dim{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-2);
+  }
+  .sustain-card h4{
+    margin: 14px 0 10px;
+    font-family: var(--display); font-weight: 600; font-size: clamp(20px, 2vw, 26px);
+    letter-spacing: -.02em; line-height: 1.15; color: var(--text); text-wrap: balance;
+  }
+  .sustain-card p{
+    margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6;
+  }
+  .sustain-card .row-sdg{
+    margin-top: 18px; display:flex; gap: 6px; flex-wrap: wrap;
+  }
+  .sustain-card .row-sdg span{
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em;
+    padding: 4px 8px; border-radius: 4px;
+    border: 1px solid var(--line-strong); color: var(--steel);
+  }
+
+  .sustain-cta{
+    margin-top: 40px; display:flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .sustain-note{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .12em; color: var(--dim); text-transform: uppercase;
+  }
+
+  /* ---------- CTA ---------- */
+  .cta{
+    margin: 80px var(--pad);
+    max-width: var(--maxw);
+    margin-left: auto; margin-right: auto;
+    border: 1px solid var(--line-strong);
+    border-radius: 22px;
+    padding: 64px 56px;
+    background:
+      radial-gradient(60% 80% at 10% 10%, rgba(31,169,245,.16), transparent 60%),
+      radial-gradient(50% 80% at 100% 100%, rgba(255,42,42,.08), transparent 60%),
+      linear-gradient(180deg, #0a131e, #050810);
+    overflow: hidden;
+    position: relative;
+  }
+  .cta::before{
+    content:""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, #000, transparent 90%);
+    -webkit-mask-image: linear-gradient(180deg, #000, transparent 90%);
+  }
+  .cta-grid{ display:grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: center; position: relative; z-index: 1;}
+  @media(max-width:900px){ .cta-grid{ grid-template-columns: 1fr } .cta{ padding: 36px 28px;}}
+  .cta h2{
+    font-family: var(--display); font-weight: 600; font-size: clamp(30px, 3.5vw, 48px); letter-spacing: -.025em; line-height: 1.05; margin: 0; text-wrap: balance;
+  }
+  .cta p{ color: var(--steel); margin-top: 16px; max-width: 50ch; line-height: 1.55;}
+  .cta-form{ display:flex; flex-direction: column; gap: 10px;}
+  .cta-form input{
+    padding: 14px 16px; border-radius: 10px; border: 1px solid var(--line-strong);
+    background: rgba(0,0,0,.4); color: var(--text); font: inherit; outline: none;
+    transition: border-color .15s;
+  }
+  .cta-form input:focus{ border-color: var(--accent); }
+  .cta-form .row2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+  .cta-form button{ margin-top: 4px;}
+  .cta-form .hint{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em;}
+
+  /* ---------- Footer ---------- */
+  footer{
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+    padding: 56px var(--pad) 36px;
+  }
+  .foot{
+    max-width: var(--maxw); margin: 0 auto;
+    display:grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px;
+  }
+  @media(max-width:900px){ .foot{ grid-template-columns: 1fr 1fr } }
+  @media(max-width:560px){ .foot{ grid-template-columns: 1fr } }
+  .foot h6{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .18em; text-transform: uppercase; margin: 0 0 14px;}
+  .foot a{ display:block; color: var(--steel); padding: 4px 0; font-size: 14px;}
+  .foot a:hover{ color: var(--accent-2);}
+  .foot p{ color: var(--muted); font-size: 13px; line-height: 1.55; margin-top: 14px; max-width: 38ch; }
+  .foot-bot{
+    max-width: var(--maxw); margin: 48px auto 0; padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display:flex; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: .1em;
+  }
+  .foot-bot .made{ color: var(--muted);}
+  .foot-bot .made span{ color: var(--accent-2);}
+
+  /* ---------- Reveal anim ---------- */
+  .reveal{ opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .8s ease; }
+  .reveal.in{ opacity: 1; transform: none; }
+
+</style>
+<template id="__bundler_thumbnail" data-bg-color="#04070c">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5BD0FF"/>
+        <stop offset="1" stop-color="#1FA9F5"/>
+      </linearGradient>
+      <linearGradient id="th" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#FF2A2A" stop-opacity="0"/>
+        <stop offset=".5" stop-color="#FF2A2A"/>
+        <stop offset="1" stop-color="#FF2A2A" stop-opacity="0"/>
+      </linearGradient>
+    </defs>
+    <!-- Staircase silhouette -->
+    <g transform="translate(370 260)" fill="none" stroke="url(#tg)" stroke-width="6" stroke-linejoin="round">
+      <path d="M0 280 L80 280 L80 220 L160 220 L160 160 L240 160 L240 100 L320 100 L320 40 L400 40 L400 -20 L460 -20"/>
+    </g>
+    <!-- Laser strike -->
+    <rect x="320" y="392" width="560" height="14" fill="url(#th)"/>
+    <!-- Wordmark -->
+    <text x="600" y="560" text-anchor="middle" font-family="Space Grotesk, sans-serif" font-weight="600" font-size="76" letter-spacing="-2" fill="#E6F1FA">stepguard</text>
+    <text x="600" y="620" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="20" letter-spacing="6" fill="#5BD0FF" opacity=".7">SEE WEAR · BEFORE IT STOPS YOU</text>
+  </svg>
+</template>
+</head>
+<body>
+<div class="bg-glow"></div>
+<div class="bg-grid"></div>
+
+<!-- LANGUAGE BAR -->
+<div class="langbar" role="region" aria-label="Taal / Language / Sprache">
+  <div class="langbar-inner">
+    <span class="langbar-tag" data-i18n="lb_tag">Stepguard B.V. — voorspellend roltrap-toezicht uit Nederland</span>
+    <div class="langbar-pick" id="siteLang" role="group" aria-label="Site language">
+      <button data-lang="nl" class="on" aria-label="Nederlands">
+        <span class="flag" aria-hidden="true"><svg viewBox="0 0 6 4" preserveAspectRatio="none"><rect width="6" height="4" fill="#21468B"/><rect width="6" height="2.667" fill="#FFFFFF"/><rect width="6" height="1.333" fill="#AE1C28"/></svg></span>
+        <span>NL</span>
+      </button>
+      <button data-lang="en" aria-label="English">
+        <span class="flag" aria-hidden="true"><svg viewBox="0 0 60 30" preserveAspectRatio="none"><clipPath id="lbUKc"><rect width="60" height="30"/></clipPath><rect width="60" height="30" fill="#012169"/><g clip-path="url(#lbUKc)"><path d="M0,0 L60,30 M60,0 L0,30" stroke="#FFFFFF" stroke-width="6"/><path d="M0,0 L60,30" stroke="#C8102E" stroke-width="4"/><path d="M60,0 L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0 V30 M0,15 H60" stroke="#FFFFFF" stroke-width="10"/><path d="M30,0 V30 M0,15 H60" stroke="#C8102E" stroke-width="6"/></g></svg></span>
+        <span>EN</span>
+      </button>
+      <button data-lang="de" aria-label="Deutsch">
+        <span class="flag" aria-hidden="true"><svg viewBox="0 0 5 3" preserveAspectRatio="none"><rect width="5" height="3" fill="#000000"/><rect width="5" height="2" y="1" fill="#DD0000"/><rect width="5" height="1" y="2" fill="#FFCE00"/></svg></span>
+        <span>DE</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#" class="brand" aria-label="Stepguard home">
+      <span class="brand-mark"><img src="assets/logo.jpeg" alt="" /></span>
+      <span class="brand-name">step<b>guard</b></span>
+    </a>
+    <div class="nav-links">
+      <a href="#product" data-i18n="nav_product">Product</a>
+      <a href="#how" data-i18n="nav_how">Technologie</a>
+      <a href="#platform" data-i18n="nav_platform">Platform</a>
+      <a href="#industries" data-i18n="nav_industries">Sectoren</a>
+      <a href="#compliance" data-i18n="nav_compliance">Compliance</a>
+      <a href="#sustainability">Duurzaamheid</a>
+      <a href="#contact" data-i18n="nav_company">Bedrijf</a>
+    </div>
+    <div class="nav-cta">
+      <a href="#contact" class="btn btn-ghost" data-i18n="nav_signin">Inloggen</a>
+      <a href="#contact" class="btn btn-primary btn-arrow" data-i18n="nav_demo">Demo aanvragen&nbsp;</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow"><span class="pulse"></span><span data-i18n="hero_eyebrow">Voorspellend toezicht voor roltrappen &nbsp;·&nbsp; CE-conforme add-on</span></span>
+        <h1 class="display">
+          <span data-i18n="hero_h1_a">Zie slijtage</span><br/>
+          <span class="strike" data-i18n="hero_h1_b">voordat het</span><br/>
+          <span class="accent" data-i18n="hero_h1_c">u stopt.</span>
+        </h1>
+        <p class="lede" data-i18n="hero_lede" data-i18n-html="1">
+          Stepguard is een AI-vision sensor en asset-managementplatform dat elke trede van een roltrap in real-time bewaakt — slijtage, schade en onveilige situaties worden <em>weken</em> voordat een trede faalt gesignaleerd. Gebouwd voor operators die zich geen stilstand kunnen veroorloven.
+        </p>
+        <div class="hero-ctas">
+          <a href="#contact" class="btn btn-primary btn-arrow" data-i18n="hero_cta_demo">Boek een demo van 20 min&nbsp;</a>
+          <a href="#how" class="btn btn-ghost" data-i18n="hero_cta_how">Hoe het werkt</a>
+        </div>
+        <div class="hero-meta">
+          <div class="item">
+            <div class="k">37.455</div>
+            <div class="l" data-i18n="hero_meta_1">Actieve roltrappen · Duitsland</div>
+          </div>
+          <div class="item">
+            <div class="k">€80.000</div>
+            <div class="l" data-i18n="hero_meta_2">Gem. spoedreparatie</div>
+          </div>
+          <div class="item">
+            <div class="k">24 / 7</div>
+            <div class="l" data-i18n="hero_meta_3">AI-inspectie per trede</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hero visual: escalator scene -->
+      <div class="hero-stage">
+        <div class="label"><span data-i18n="hero_stage_live">Live · U-Bahn-pilot</span></div>
+        <div class="label-r" data-i18n="hero_stage_cam">Cam #SG-04-A</div>
+        <svg class="stage-svg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="stepGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#1a2433"/>
+              <stop offset="1" stop-color="#0c1320"/>
+            </linearGradient>
+            <linearGradient id="stepEdge" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#3a4a60"/>
+              <stop offset="1" stop-color="#1a2433"/>
+            </linearGradient>
+            <linearGradient id="laserGrad" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#FF2A2A" stop-opacity="0"/>
+              <stop offset=".4" stop-color="#FF2A2A" stop-opacity=".8"/>
+              <stop offset="1" stop-color="#FF2A2A" stop-opacity="0"/>
+            </linearGradient>
+            <radialGradient id="lens" cx=".4" cy=".4" r=".7">
+              <stop offset="0" stop-color="#7BD7FF"/>
+              <stop offset=".4" stop-color="#1FA9F5"/>
+              <stop offset="1" stop-color="#03263d"/>
+            </radialGradient>
+            <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3"/>
+            </filter>
+          </defs>
+
+          <!-- Floor / handrail abstract -->
+          <line x1="0" y1="540" x2="600" y2="540" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+          <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+
+          <!-- Escalator handrail line (diagonal) -->
+          <line x1="50" y1="500" x2="500" y2="120" stroke="rgba(91,208,255,.25)" stroke-width="1.5" stroke-dasharray="2 6"/>
+
+          <!-- Steps (staircase) -->
+          <g id="steps" transform="translate(40, 80)">
+            <!-- 12 steps going up-right -->
+          </g>
+
+          <!-- Sensor box at base -->
+          <g transform="translate(50, 470)">
+            <rect x="-30" y="-30" width="90" height="46" rx="6" fill="#10182a" stroke="#3a4a60" stroke-width="1.2"/>
+            <rect x="-26" y="-26" width="82" height="3" fill="#1FA9F5" opacity=".4"/>
+            <text x="-22" y="-12" font-family="JetBrains Mono" font-size="6" fill="#5BD0FF" letter-spacing="1.5">STEPGUARD · SG-04</text>
+            <!-- IDS Camera lens -->
+            <circle cx="38" cy="0" r="13" fill="url(#lens)"/>
+            <circle cx="38" cy="0" r="13" fill="none" stroke="#0a3a5e" stroke-width="2"/>
+            <circle cx="36" cy="-2" r="3.5" fill="#7BD7FF" opacity=".8"/>
+            <!-- Indicator LEDs -->
+            <circle cx="-18" cy="8" r="2" fill="#38D38A"/>
+            <circle cx="-10" cy="8" r="2" fill="#1FA9F5"/>
+          </g>
+
+          <!-- Laser cone -->
+          <g id="laser" opacity=".95">
+            <path id="laserBeam" d="M 88 470 L 320 250" stroke="url(#laserGrad)" stroke-width="1.4" filter="url(#laserGlow)"/>
+            <path d="M 88 470 L 320 250" stroke="#FF2A2A" stroke-width=".6" opacity=".9"/>
+            <circle id="laserDot" cx="320" cy="250" r="3" fill="#FF2A2A" filter="url(#laserGlow)"/>
+            <circle cx="320" cy="250" r="1.5" fill="#fff"/>
+          </g>
+
+          <!-- Scan ticks -->
+          <g id="scanTicks" font-family="JetBrains Mono" font-size="8" fill="#5BD0FF" opacity=".7"></g>
+        </svg>
+
+        <div class="hud">
+          <div>
+            <div class="hud-title" id="hudTitle">Step integrity scan · Level 1</div>
+            <div class="hud-status"><span class="dot" id="hudDot"></span><span id="hudStatus">Level 1 — All steps nominal · 0 anomalies</span></div>
+          </div>
+          <div class="levels" id="hudLevels">
+            <div class="lv l1 on" data-lv="1">1</div>
+            <div class="lv l2" data-lv="2">2</div>
+            <div class="lv l3" data-lv="3">3</div>
+            <div class="lv l4" data-lv="4">4</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track" id="ticker"></div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem" id="product">
+  <div class="wrap">
+    <div class="quote reveal">
+      <div>
+        <div class="section-eyebrow" data-i18n="prob_eyebrow">De prijs van een gemiste trede</div>
+        <h2 class="section-title" data-i18n="prob_title" data-i18n-html="1">Roltrappen falen op het slechtst denkbare moment — en de rekening komt <em>achteraf</em>.</h2>
+      </div>
+      <div>
+        <div class="news-card">
+          <div class="date" data-i18n="prob_news_date">12 maart 2026 · Berlijn</div>
+          <h4 data-i18n="prob_news_title">50+ roltrappen vielen uit op Berlin Hauptbahnhof op één dag.</h4>
+          <p data-i18n="prob_news_body">Hoge passagiersstromen, verouderde treden, geen waarschuwing vooraf. Operators in heel Duitsland willen reactieve interventies vervangen door continue monitoring — en de arbeidskosten maken dat onvermijdelijk.</p>
+          <div class="src" data-i18n="prob_news_src">Bronnen: rbb24.de · Euronews · ELA Statistical Data 2022</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow" data-i18n="how_eyebrow">Hoe het werkt</div>
+      <h2 class="section-title" data-i18n="how_title">Vier lagen tussen een versleten trede en een gevallen passagier.</h2>
+      <p class="section-lede" data-i18n="how_lede">Eén verzegelde sensorunit, onder de roltrap gemonteerd, bekijkt elke trede die boven hem voorbij komt. Van ruwe beelden tot bruikbare melding in minder dan een seconde — zonder wijzigingen aan de roltrap en zonder verstoring van het bestaande onderhoudscontract.</p>
+    </div>
+
+    <div class="grid-4">
+      <div class="feature reveal">
+        <div class="num">01 · <span data-i18n="how_f1_step">Vastleggen</span> <span class="ico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><circle cx="12" cy="12.5" r="3.5"/></svg>
+        </span></div>
+        <h3 data-i18n="how_f1_title">Industriële IDS-vision</h3>
+        <p data-i18n="how_f1_body">Trillings­bestendige IDS-camera's met low-light prestaties inspecteren elke trede met de snelheid waarmee hij passeert. Verzegelde behuizing onder de roltrap, zonder rail-aanpassingen.</p>
+        <div class="spec"><span>GS-class IP65</span><span>30 FPS · 4K</span></div>
+      </div>
+      <div class="feature reveal">
+        <div class="num">02 · <span data-i18n="how_f2_step">Detecteren</span> <span class="ico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h3l2-7 4 14 2-7h7"/></svg>
+        </span></div>
+        <h3 data-i18n="how_f2_title">AI-vision slijtagemodel</h3>
+        <p data-i18n="how_f2_body">Getraind op duizenden uren echte Nederlandse en Duitse roltrap-beelden. Herkent scheuren in treden, randslijtage, plaat-misalignment en losse voorwerpen — over merken en stations heen.</p>
+        <div class="spec"><span data-i18n="how_f2_s1">Patent aangevraagd</span><span data-i18n="how_f2_s2">On-prem inferentie</span></div>
+      </div>
+      <div class="feature reveal">
+        <div class="num">03 · <span data-i18n="how_f3_step">Classificeren</span> <span class="ico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 22h20z"/><line x1="12" y1="10" x2="12" y2="15"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
+        </span></div>
+        <h3 data-i18n="how_f3_title">Alarm in vier niveaus</h3>
+        <p data-i18n="how_f3_body">Iedere gebeurtenis krijgt een score van een routinemelding tot een stop-de-roltrap-noodgeval. Drempels per locatie, per operator en per dienst instelbaar — vals alarm blijft buiten de wachtrij.</p>
+        <div class="spec"><span data-i18n="how_f3_s1">L1-melding → L4-stop</span><span data-i18n="how_f3_s2">Operator-afstelbaar</span></div>
+      </div>
+      <div class="feature reveal">
+        <div class="num">04 · <span data-i18n="how_f4_step">Beslissen</span> <span class="ico">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+        </span></div>
+        <h3 data-i18n="how_f4_title">Asset-platform</h3>
+        <p data-i18n="how_f4_body">Een meertalig webplatform toont elke roltrap in uw vloot, met KPI's, monteur-dispatch, exporteerbare EN 115-rapporten en ROI-tracking die uw CFO daadwerkelijk leest.</p>
+        <div class="spec"><span>EU-hosted</span><span>GDPR · BDSG</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PLATFORM PREVIEW -->
+<section class="platform" id="platform">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow" data-i18n="pf_eyebrow">Het Stepguard-platform</div>
+      <h2 class="section-title" data-i18n="pf_title">Een controleruimte voor iedere roltrap die u beheert.</h2>
+      <p class="section-lede" id="platform-lede" data-i18n="pf_lede">Zeven dedicated pagina's — hieronder live ingebed. Klik op een menupunt, wissel de taal, filter alarmen op ernst, open een incident. De knoppen werken echt.</p>
+    </div>
+
+    <div class="platform-shell reveal" id="pfShell">
+      <!-- App top bar -->
+      <div class="pf-top">
+        <a class="pf-brand" href="#"><span class="mk"><img src="assets/logo.jpeg" alt=""/></span>step<b>guard</b></a>
+        <div class="pf-crumb" id="pfCrumb">Beheer · <b>Dashboard</b></div>
+        <div class="pf-search">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input id="pfSearch" placeholder="Zoeken — stations, roltrappen …" />
+        </div>
+        <div class="pf-lang" id="pfLang">
+          <button data-l="nl" class="on">NL</button>
+          <button data-l="en">EN</button>
+          <button data-l="de">DE</button>
+        </div>
+        <button class="pf-bell" id="pfBell" aria-label="Notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9z"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+          <span class="count">3</span>
+        </button>
+        <div class="pf-avatar" title="Rem van der Heijden">RH</div>
+        <div class="notif-pop" id="pfNotif"></div>
+      </div>
+
+      <div class="pf-body">
+        <aside class="pf-side" id="pfSide"><!-- nav injected --></aside>
+        <div class="pf-main" id="pfMain"><!-- page content --></div>
+
+        <!-- detail drawer overlays the body grid -->
+        <div class="drawer-bg" id="pfDrawerBg"></div>
+        <div class="drawer" id="pfDrawer" role="dialog" aria-label="Detail"></div>
+
+        <!-- toast -->
+        <div class="toast" id="pfToast"><span class="dot"></span><span id="pfToastMsg"></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INDUSTRIES -->
+<section class="industries" id="industries">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow" data-i18n="ind_eyebrow">Gebouwd voor</div>
+      <h2 class="section-title" data-i18n="ind_title">Waar één stilstaande roltrap een meetbaar probleem is.</h2>
+    </div>
+
+    <div class="industry-grid">
+      <div class="ind-card reveal">
+        <div class="top">
+          <span class="num">01</span>
+          <svg class="ill" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M10 60 L40 25 L70 60"/>
+            <path d="M14 60 H66"/>
+            <circle cx="40" cy="55" r="2.5" fill="currentColor"/>
+            <path d="M22 60 V52 H58 V60" />
+            <line x1="28" y1="52" x2="28" y2="42" stroke-dasharray="2 3"/>
+            <line x1="52" y1="52" x2="52" y2="42" stroke-dasharray="2 3"/>
+          </svg>
+        </div>
+        <div>
+          <h4 data-i18n="ind_1_h">Openbaar vervoer</h4>
+          <p class="desc" data-i18n="ind_1_p">MVG, BVG, FVG, Deutsche Bahn, NS. Netwerken die honderden roltrappen onder continue belasting draaien. Alleen MVG beheert er 772.</p>
+          <div class="tag" data-i18n="ind_1_t">→ Ankersegment</div>
+        </div>
+      </div>
+      <div class="ind-card reveal">
+        <div class="top">
+          <span class="num">02</span>
+          <svg class="ill" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M10 50 H70 L60 35 L50 50 M50 50 L40 30 L30 50"/>
+            <line x1="10" y1="60" x2="70" y2="60"/>
+            <circle cx="40" cy="22" r="2" fill="currentColor"/>
+            <line x1="40" y1="22" x2="40" y2="14"/>
+          </svg>
+        </div>
+        <div>
+          <h4 data-i18n="ind_2_h">Luchthavens</h4>
+          <p class="desc" data-i18n="ind_2_p">Duitsland telt 32 commerciële luchthavens. Frankfurt, Düsseldorf en Berlijn verwerken dagelijks miljoenen passagiers via roltrap-afhankelijke stromen.</p>
+          <div class="tag" data-i18n="ind_2_t">→ Hoge beschikbaarheid</div>
+        </div>
+      </div>
+      <div class="ind-card reveal">
+        <div class="top">
+          <span class="num">03</span>
+          <svg class="ill" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <rect x="14" y="22" width="52" height="36" rx="2"/>
+            <line x1="14" y1="34" x2="66" y2="34"/>
+            <line x1="14" y1="46" x2="66" y2="46"/>
+            <line x1="30" y1="22" x2="30" y2="58"/>
+            <line x1="50" y1="22" x2="50" y2="58"/>
+            <path d="M40 14 L40 22 M34 18 L46 18"/>
+          </svg>
+        </div>
+        <div>
+          <h4 data-i18n="ind_3_h">Winkelcentra</h4>
+          <p class="desc" data-i18n="ind_3_p">ECE Group, Duitslands grootste centrum-operator. IKEA, Galeria Kaufhof. Bezoekersstromen zijn direct gekoppeld aan omzet per vierkante meter.</p>
+          <div class="tag" data-i18n="ind_3_t">→ Omzetbescherming</div>
+        </div>
+      </div>
+      <div class="ind-card reveal">
+        <div class="top">
+          <span class="num">04</span>
+          <svg class="ill" viewBox="0 0 80 80" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <ellipse cx="40" cy="42" rx="32" ry="18"/>
+            <ellipse cx="40" cy="42" rx="22" ry="12"/>
+            <ellipse cx="40" cy="42" rx="12" ry="6"/>
+            <line x1="8" y1="42" x2="72" y2="42" stroke-dasharray="2 3"/>
+          </svg>
+        </div>
+        <div>
+          <h4 data-i18n="ind_4_h">Stadions &amp; venues</h4>
+          <p class="desc" data-i18n="ind_4_p">Messe Berlin, München, Frankfurt. Geconcentreerde uitstroommomenten — als 40.000 mensen tegelijk naar buiten gaan, wordt een stilstaande roltrap een veiligheids­incident.</p>
+          <div class="tag" data-i18n="ind_4_t">→ Crowd flow</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ROI -->
+<section class="roi">
+  <div class="wrap">
+    <div class="roi-grid">
+      <div class="reveal">
+        <div class="section-eyebrow" data-i18n="roi_eyebrow">De economische kant</div>
+        <h2 class="section-title" data-i18n="roi_title">Terugverdiend vanaf de eerste voorkomen storing.</h2>
+        <p class="section-lede" data-i18n="roi_lede" data-i18n-html="1">Een spoedvervanging van een trede kost tot <strong style="color:var(--text)">€80.000</strong> aan materiaal alleen — exclusief stilstand, gederfde ticketinkomsten, monteur-overuren of SLA-boetes. Stepguard pikt het slijtagepatroon weken eerder op en maakt er een geplande klus overdag van.</p>
+        <div style="margin-top:32px; display:flex; gap:14px; flex-wrap: wrap;">
+          <a href="#contact" class="btn btn-primary btn-arrow" data-i18n="roi_cta_1">Bereken uw ROI&nbsp;</a>
+          <a href="#compliance" class="btn btn-ghost" data-i18n="roi_cta_2">Compliance-brief bekijken</a>
+        </div>
+      </div>
+      <div class="compare reveal">
+        <div class="col good">
+          <div class="tag" data-i18n="roi_good_tag">Met Stepguard</div>
+          <div class="price">€20–30k</div>
+          <div class="sub" data-i18n="roi_good_sub" data-i18n-html="1">Eenmalig per roltrap<br/>+ €1.000 / jaar software</div>
+          <div class="li">
+            <span><span class="mk">+</span> <span data-i18n="roi_good_1">Detecteert slijtage weken vooraf</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_good_2">Gepland onderhoud, overdag</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_good_3">Real-time vlootindicatoren</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_good_4">Trede-levensduur verlengd</span></span>
+          </div>
+        </div>
+        <div class="col bad">
+          <div class="tag" data-i18n="roi_bad_tag">Reactief herstel</div>
+          <div class="price" style="color:var(--hot)">€80k+</div>
+          <div class="sub" data-i18n="roi_bad_sub" data-i18n-html="1">Per noodgeval, alleen materiaal<br/>excl. stilstand en SLA-boetes</div>
+          <div class="li">
+            <span><span class="mk">×</span> <span data-i18n="roi_bad_1">Trede-breuk met passagiers aan boord</span></span>
+            <span><span class="mk">×</span> <span data-i18n="roi_bad_2">Monteur-dispatch buiten kantooruren</span></span>
+            <span><span class="mk">×</span> <span data-i18n="roi_bad_3">1–3 weken buiten dienst</span></span>
+            <span><span class="mk">×</span> <span data-i18n="roi_bad_4">Aansprakelijkheids- en reputatieschade</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLIANCE -->
+<section class="compliance" id="compliance">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow" data-i18n="comp_eyebrow">Gebouwd voor Europese infrastructuur</div>
+      <h2 class="section-title" data-i18n="comp_title">Conform-by-design — geen retrofit.</h2>
+      <p class="section-lede" data-i18n="comp_lede">Stepguard wordt geïnstalleerd als monitoring add-on. De roltrap zelf wordt nooit aangepast. Daarmee blijft de bestaande CE-verklaring intact en is de route met TÜV, BDSG en de relevante toezichthouders helder.</p>
+    </div>
+
+    <div class="badges">
+      <div class="badge reveal">
+        <div class="code">EN 115 / DIN 115</div>
+        <div class="name" data-i18n="badge_1_n">Roltrap-norm</div>
+        <div class="d" data-i18n="badge_1_d">Niet-modificerende add-on. Bestaande veiligheidsketen, remcircuit en EN 115-conformiteit ongewijzigd.</div>
+      </div>
+      <div class="badge reveal">
+        <div class="code">CE · ADD-ON</div>
+        <div class="name" data-i18n="badge_2_n">CE-verklaring blijft geldig</div>
+        <div class="d" data-i18n="badge_2_d">De sensorbox is een passief monitoringapparaat. De CE-verklaring van de roltrap blijft geldig na installatie.</div>
+      </div>
+      <div class="badge reveal">
+        <div class="code">EU AI ACT · 2027</div>
+        <div class="name" data-i18n="badge_3_n">Notified-body-ready</div>
+        <div class="d" data-i18n="badge_3_d">Hoog-risico-classificatie verwacht. Notified-body-beoordeling is opgenomen in het commercialisatieplan.</div>
+      </div>
+      <div class="badge reveal">
+        <div class="code">GDPR · BDSG</div>
+        <div class="name" data-i18n="badge_4_n">EU-datalocatie</div>
+        <div class="d" data-i18n="badge_4_d">EU-gehost, meertalige interface en rapporten. 85% van de Duitse operators noemt gegevensbescherming als grootste AI-zorg.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUSTAINABILITY -->
+<section class="sustain" id="sustainability">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow">Duurzaamheid · SDG-impact</div>
+      <h2 class="section-title">Voorspellend onderhoud raakt zes Sustainable Development Goals.</h2>
+      <p class="section-lede">Stepguard is meer dan een sensor. Door storingen weken vooraf te detecteren voorkomen we materiaalverspilling, beschermen we passagiers, ontlasten we monteurs en versterken we de menselijke controle op kritieke AI&#x2011;systemen. Vier dimensies van impact, zes UN&#x2011;doelen.</p>
+    </div>
+
+    <div class="sdg-strip reveal" aria-label="UN SDG impact">
+      <div class="sdg-tile" style="--sdg:#F5A623"><div class="num">09</div><div class="ttl">Industrie &amp; infrastructuur</div></div>
+      <div class="sdg-tile" style="--sdg:#F99D26"><div class="num">11</div><div class="ttl">Duurzame steden</div></div>
+      <div class="sdg-tile" style="--sdg:#BF8B2E"><div class="num">12</div><div class="ttl">Verantwoorde consumptie</div></div>
+      <div class="sdg-tile" style="--sdg:#3F7E44"><div class="num">13</div><div class="ttl">Klimaat&#x2011;actie</div></div>
+      <div class="sdg-tile" style="--sdg:#00689D"><div class="num">16</div><div class="ttl">Sterke instituties</div></div>
+      <div class="sdg-tile" style="--sdg:#19486A"><div class="num">17</div><div class="ttl">Partnerschap</div></div>
+    </div>
+
+    <div class="sustain-grid">
+      <a class="sustain-card reveal" href="Sustainability.html#economic">
+        <div class="dim">01 · Economisch</div>
+        <h4>€80k spoedreparatie wordt €0.</h4>
+        <p>Eerste voorkomen storing dekt de installatie. Disruptie van de reactief&#x2011;onderhoud&#x2011;markt en directe steun aan lokale Duitse fabricage (IDS, Obersulm).</p>
+        <div class="row-sdg"><span>SDG 9</span><span>SDG 11</span></div>
+      </a>
+      <a class="sustain-card reveal" href="Sustainability.html#social">
+        <div class="dim">02 · Sociaal</div>
+        <h4>Veiligheid voor wie het meest afhankelijk is.</h4>
+        <p>50+ storingen op Berlin Hbf op één dag — vooral kwetsbaar voor ouderen en minder&#x2011;mobielen. Stepguard ziet slijtage weken vooraf. Monteurs gaan van noodoproep naar geplande inzet.</p>
+        <div class="row-sdg"><span>SDG 11</span><span>SDG 17</span></div>
+      </a>
+      <a class="sustain-card reveal" href="Sustainability.html#ecological">
+        <div class="dim">03 · Ecologisch</div>
+        <h4>222 kg CO₂ per niet&#x2011;vervangen trede.</h4>
+        <p>Eén trede = 15 kg aluminium. Voorspellend onderhoud verlengt levensduur, vermindert afval en sluit aan op Duitslands NCES circulaire&#x2011;economie&#x2011;strategie.</p>
+        <div class="row-sdg"><span>SDG 12</span><span>SDG 13</span></div>
+      </a>
+      <a class="sustain-card reveal" href="Sustainability.html#ethical">
+        <div class="dim">04 · Ethisch</div>
+        <h4>AI suggereert. De mens beslist.</h4>
+        <p>Level&#x2011;4 alarmen stoppen nooit een roltrap zonder menselijke bevestiging. Notified&#x2011;body&#x2011;assessment opgenomen in het commercialisatieplan onder de EU AI Act.</p>
+        <div class="row-sdg"><span>SDG 16</span><span>SDG 17</span></div>
+      </a>
+    </div>
+
+    <div class="sustain-cta reveal">
+      <a href="Sustainability.html" class="btn btn-primary btn-arrow">Bekijk de volledige SDG&#x2011;impact&nbsp;</a>
+      <div class="sustain-note">Vier dimensies · zes SDGs · 13 concrete impactpunten.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+  <div class="cta-grid">
+    <div>
+      <h2 data-i18n="cta_title">Draai een pilot op drie roltrappen. Zie het verschil binnen 90 dagen.</h2>
+      <p data-i18n="cta_body">We rollen pilots uit met OV-operators in heel DACH en Nederland. Vertel ons over uw netwerk en wij komen binnen twee werkdagen terug met een afgebakende pilot — gereduceerde hardware, prestatie-gebonden pricing, volledige referentie-build.</p>
+    </div>
+    <form class="cta-form" data-i18n-form="1" onsubmit="event.preventDefault(); this.querySelector('button').textContent = (window.__i18n_t ? window.__i18n_t('cta_thanks') : 'Bedankt — we nemen contact op'); this.querySelector('button').disabled=true;">
+      <div class="row2">
+        <input type="text" data-i18n-ph="cta_ph_name" placeholder="Voornaam" required />
+        <input type="text" data-i18n-ph="cta_ph_company" placeholder="Operator / bedrijf" required />
+      </div>
+      <input type="email" data-i18n-ph="cta_ph_email" placeholder="Zakelijk e-mailadres" required />
+      <input type="text" data-i18n-ph="cta_ph_size" placeholder="Netwerk­grootte — ca. aantal roltrappen" />
+      <button class="btn btn-primary btn-arrow" type="submit" data-i18n="cta_submit">Demo aanvragen&nbsp;</button>
+      <div class="hint" data-i18n="cta_hint">Wij reageren in het Nederlands, Engels of Duits — uw keuze.</div>
+    </form>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="foot">
+    <div>
+      <a href="#" class="brand" style="display:inline-flex">
+        <span class="brand-mark"><img src="assets/logo.jpeg" alt="" /></span>
+        <span class="brand-name">step<b>guard</b></span>
+      </a>
+      <p data-i18n="foot_blurb">Stepguard B.V. — een Cboost spin-off. Voorspellend roltrap-toezicht, gebouwd in Nederland, uitgerold in heel Europa. Patent aangevraagd.</p>
+    </div>
+    <div>
+      <h6 data-i18n="foot_h_product">Product</h6>
+      <a href="#how" data-i18n="nav_how">Technologie</a>
+      <a href="#platform" data-i18n="nav_platform">Platform</a>
+      <a href="#industries" data-i18n="nav_industries">Sectoren</a>
+      <a href="#compliance" data-i18n="nav_compliance">Compliance</a>
+    </div>
+    <div>
+      <h6 data-i18n="foot_h_company">Bedrijf</h6>
+      <a href="#" data-i18n="foot_about">Over ons</a>
+      <a href="#" data-i18n="foot_cboost">Cboost-groep</a>
+      <a href="#" data-i18n="foot_careers">Vacatures</a>
+      <a href="#" data-i18n="foot_press">Pers</a>
+    </div>
+    <div>
+      <h6 data-i18n="foot_h_contact">Contact</h6>
+      <a href="mailto:hello@stepguard.com">hello@stepguard.com</a>
+      <a href="#">Den Dolder, NL</a>
+      <a href="#">+31 (0)30 ··· ····</a>
+      <a href="#">LinkedIn</a>
+    </div>
+  </div>
+  <div class="foot-bot">
+    <div>© 2026 Stepguard B.V. · KvK 9·······</div>
+    <div class="made"><span data-i18n="foot_made">Voorspellend toezicht voor Europese infrastructuur</span> · <span>● <span data-i18n="foot_operational">operationeel</span></span></div>
+  </div>
+</footer>
+
+<script>
+  // ---- Site i18n (marketing shell) ----
+  // Dutch is the source-of-truth in DOM; this dict maps to EN + DE.
+  const SITE_I18N = {
+    en: {
+      lb_tag: 'Stepguard B.V. — predictive escalator monitoring from the Netherlands',
+      nav_product: 'Product', nav_how: 'Technology', nav_platform: 'Platform',
+      nav_industries: 'Industries', nav_compliance: 'Compliance', nav_company: 'Company',
+      nav_signin: 'Sign in', nav_demo: 'Request demo\u00A0',
+      hero_eyebrow: 'Predictive monitoring for escalators \u00A0·\u00A0 CE compliant add-on',
+      hero_h1_a: 'See wear', hero_h1_b: 'before it', hero_h1_c: 'stops you.',
+      hero_lede: 'Stepguard is an AI-vision sensor and asset management platform that watches every step of an escalator in real time — flagging wear, damage and unsafe conditions <em>weeks</em> before a step fails. Built for the operators who can\'t afford a shutdown.',
+      hero_cta_demo: 'Book a 20-min demo\u00A0', hero_cta_how: 'How it works',
+      hero_meta_1: 'Active escalators · Germany',
+      hero_meta_2: 'Avg. emergency repair cost',
+      hero_meta_3: 'Per-step AI inspection',
+      hero_stage_live: 'Live · U-Bahn pilot', hero_stage_cam: 'Cam #SG-04-A',
+      hud_t1: 'Step integrity scan · Level 1',
+      hud_s1: 'Level 1 — All steps nominal · 0 anomalies',
+      hud_t2: 'Step integrity scan · Level 2',
+      hud_s2: 'Level 2 — Tread wear detected · Step 09',
+      hud_t3: 'Step integrity scan · Level 3',
+      hud_s3: 'Level 3 — Surface fracture · Step 09 · Step 11',
+      prob_eyebrow: 'The cost of a missed step',
+      prob_title: 'Escalators fail at the worst possible time — and the bill arrives <em>after</em>.',
+      prob_news_date: '12 March 2026 · Berlin',
+      prob_news_title: '50+ escalators failed at Berlin Hauptbahnhof in a single day.',
+      prob_news_body: 'Heavy footfall, ageing treads, no advance warning. Operators across Germany are pushing to replace reactive call-outs with continuous monitoring — and labour costs make it inevitable.',
+      prob_news_src: 'Sources: rbb24.de · Euronews · ELA Statistical Data 2022',
+      how_eyebrow: 'How it works',
+      how_title: 'Four layers between a worn step and a passenger fall.',
+      how_lede: 'One sealed sensor unit, mounted underneath the escalator, watches every step that passes overhead. From raw vision to actionable alert in under a second — without modifying the escalator and without disrupting the existing maintenance contract.',
+      how_f1_step:'Capture', how_f1_title:'Industrial IDS vision',
+      how_f1_body:'Low-light, vibration-rated IDS cameras inspect each step as it passes — at the speed it passes. Sealed enclosure mounts beneath the escalator, no rail modifications.',
+      how_f2_step:'Detect', how_f2_title:'AI-vision wear model',
+      how_f2_body:'Trained on thousands of real Dutch and German escalator hours. Detects tread cracks, edge fraying, plate misalignment and foreign objects — across brands, across stations.',
+      how_f2_s1:'Patent pending', how_f2_s2:'On-prem inference',
+      how_f3_step:'Classify', how_f3_title:'Four-level alarm',
+      how_f3_body:'Every event is graded from a routine notice to a stop-the-escalator emergency. Thresholds are configurable per site, per operator, per shift — false alarms stay out of the queue.',
+      how_f3_s1:'L1 notice → L4 stop', how_f3_s2:'Operator-tunable',
+      how_f4_step:'Decide', how_f4_title:'Asset platform',
+      how_f4_body:'A multilingual web platform shows every escalator in your fleet, with KPIs, technician dispatch, exportable EN 115 reports, and ROI tracking your CFO will actually read.',
+      pf_eyebrow: 'The Stepguard platform',
+      pf_title: 'A control room for every escalator you operate.',
+      pf_lede: 'Seven purpose-built pages — embedded live below. Click any nav item, switch the language, filter alarms by severity, open an incident. The buttons are real.',
+      ind_eyebrow:'Built for', ind_title:'Where one stalled escalator is a measurable problem.',
+      ind_1_h:'Public transit', ind_1_p:'MVG, BVG, FVG, Deutsche Bahn, NS. Networks running hundreds of escalators under continuous load. MVG alone operates 772.', ind_1_t:'→ Anchor segment',
+      ind_2_h:'Airports', ind_2_p:'Germany operates 32 commercial airports. Frankfurt, Düsseldorf and Berlin move millions of passengers through escalator-dependent flows daily.', ind_2_t:'→ High availability',
+      ind_3_h:'Retail centres', ind_3_p:'ECE Group, Germany\'s largest mall operator. IKEA, Galeria Kaufhof. Footfall directly tied to revenue per square metre.', ind_3_t:'→ Revenue protection',
+      ind_4_h:'Stadiums & venues', ind_4_p:'Messe Berlin, München, Frankfurt. Concentrated egress windows — when 40,000 people exit at once, a stopped escalator becomes a safety incident.', ind_4_t:'→ Crowd flow',
+      roi_eyebrow:'The economics', roi_title:'Pays back from the first prevented breakdown.',
+      roi_lede:'An emergency step replacement runs up to <strong style="color:var(--text)">€80,000</strong> in materials alone — before downtime, lost ticket revenue, technician overtime, or the SLA penalty. Stepguard catches the wear pattern weeks earlier and turns it into a scheduled, daytime job.',
+      roi_cta_1:'Calculate your ROI\u00A0', roi_cta_2:'See compliance brief',
+      roi_good_tag:'With Stepguard', roi_good_sub:'One-time per escalator<br/>+ €1,000 / year software',
+      roi_good_1:'Catches wear weeks ahead', roi_good_2:'Planned, daytime maintenance', roi_good_3:'Real-time fleet KPIs', roi_good_4:'Step lifetime extended',
+      roi_bad_tag:'Reactive repair', roi_bad_sub:'Per emergency, materials only<br/>excl. downtime and SLAs',
+      roi_bad_1:'Step failure with passengers on board', roi_bad_2:'Out-of-hours technician dispatch', roi_bad_3:'1–3 weeks out of service', roi_bad_4:'Liability and reputation cost',
+      comp_eyebrow:'Built for European infrastructure', comp_title:'Compliant by design — not by retrofit.',
+      comp_lede:'Stepguard is installed as a monitoring add-on. The escalator itself is never modified. That keeps the existing CE declaration intact and clears the path with TÜV, BDSG and the regulators that matter.',
+      badge_1_n:'Escalator standard', badge_1_d:'Non-modifying add-on. Existing safety chain, brake circuit and EN 115 conformity untouched.',
+      badge_2_n:'CE declaration intact', badge_2_d:'Sensor box is a passive monitoring device. The escalator\'s CE declaration remains valid post-install.',
+      badge_3_n:'Notified-body ready', badge_3_d:'High-risk classification anticipated. Notified-body assessment embedded in the commercialisation plan.',
+      badge_4_n:'EU data residency', badge_4_d:'EU-hosted, multilingual interface and reports. 85% of German operators rate data protection as their top AI concern.',
+      cta_title:'Run a pilot on three escalators. See the difference in 90 days.',
+      cta_body:'We\'re shipping pilots with public transport operators across the DACH region and the Netherlands. Tell us about your network and we\'ll come back within two business days with a scoped pilot — discounted hardware, performance-based pricing, full reference build.',
+      cta_ph_name:'First name', cta_ph_company:'Operator / company', cta_ph_email:'Work email', cta_ph_size:'Network size — approx. escalators',
+      cta_submit:'Request demo\u00A0', cta_hint:'We reply in Dutch, English or German — your pick.',
+      cta_thanks:'Thanks — we\'ll be in touch',
+      foot_blurb:'Stepguard B.V. — a Cboost spin-off. Predictive escalator monitoring, built in the Netherlands, deployed across Europe. Patent pending.',
+      foot_h_product:'Product', foot_h_company:'Company', foot_h_contact:'Contact',
+      foot_about:'About', foot_cboost:'Cboost group', foot_careers:'Careers', foot_press:'Press',
+      foot_made:'Predictive monitoring for European infrastructure', foot_operational:'operational',
+    },
+    de: {
+      lb_tag: 'Stepguard B.V. — Vorausschauende Eskalator-Überwachung aus den Niederlanden',
+      nav_product: 'Produkt', nav_how: 'Technologie', nav_platform: 'Plattform',
+      nav_industries: 'Branchen', nav_compliance: 'Compliance', nav_company: 'Unternehmen',
+      nav_signin: 'Anmelden', nav_demo: 'Demo anfragen\u00A0',
+      hero_eyebrow: 'Vorausschauende Überwachung für Eskalatoren \u00A0·\u00A0 CE-konformer Add-on',
+      hero_h1_a: 'Verschleiß sehen,', hero_h1_b: 'bevor er Sie', hero_h1_c: 'stoppt.',
+      hero_lede: 'Stepguard ist ein AI-Vision-Sensor und Asset-Management-Plattform, der jede Stufe eines Eskalators in Echtzeit überwacht — Verschleiß, Schäden und unsichere Zustände werden <em>Wochen</em> vor einem Stufenbruch erkannt. Gebaut für Betreiber, die sich keinen Stillstand leisten können.',
+      hero_cta_demo: '20-Min-Demo buchen\u00A0', hero_cta_how: 'So funktioniert\'s',
+      hero_meta_1: 'Aktive Eskalatoren · Deutschland',
+      hero_meta_2: 'Ø Notreparatur-Kosten',
+      hero_meta_3: 'AI-Inspektion pro Stufe',
+      hero_stage_live: 'Live · U-Bahn-Pilot', hero_stage_cam: 'Cam #SG-04-A',
+      hud_t1: 'Stufenintegritätsscan · Level 1',
+      hud_s1: 'Level 1 — Alle Stufen nominal · 0 Auffälligkeiten',
+      hud_t2: 'Stufenintegritätsscan · Level 2',
+      hud_s2: 'Level 2 — Trittflächenabnutzung erkannt · Stufe 09',
+      hud_t3: 'Stufenintegritätsscan · Level 3',
+      hud_s3: 'Level 3 — Oberflächenbruch · Stufe 09 · Stufe 11',
+      prob_eyebrow: 'Die Kosten einer übersehenen Stufe',
+      prob_title: 'Eskalatoren fallen zum schlechtesten Zeitpunkt aus — und die Rechnung kommt <em>danach</em>.',
+      prob_news_date: '12. März 2026 · Berlin',
+      prob_news_title: '50+ Eskalatoren am Berliner Hauptbahnhof an einem Tag ausgefallen.',
+      prob_news_body: 'Hohe Passagierströme, gealterte Stufen, keine Vorwarnung. Betreiber in ganz Deutschland wollen reaktive Einsätze durch kontinuierliche Überwachung ersetzen — die Lohnkosten machen es unausweichlich.',
+      prob_news_src: 'Quellen: rbb24.de · Euronews · ELA Statistical Data 2022',
+      how_eyebrow: 'So funktioniert es',
+      how_title: 'Vier Schichten zwischen einer abgenutzten Stufe und einem Passagiersturz.',
+      how_lede: 'Eine versiegelte Sensoreinheit, unter dem Eskalator montiert, beobachtet jede Stufe, die darüber hinwegrollt. Von Rohbild zu handlungsfähigem Alarm in unter einer Sekunde — ohne den Eskalator zu modifizieren und ohne den bestehenden Wartungsvertrag zu stören.',
+      how_f1_step:'Erfassen', how_f1_title:'Industrielle IDS-Vision',
+      how_f1_body:'Vibrationsfeste IDS-Kameras mit Low-Light-Performance inspizieren jede Stufe in der Geschwindigkeit, in der sie vorbeifährt. Versiegeltes Gehäuse unter dem Eskalator, keine Rail-Modifikationen.',
+      how_f2_step:'Erkennen', how_f2_title:'AI-Vision-Verschleißmodell',
+      how_f2_body:'Trainiert auf Tausenden realer niederländischer und deutscher Eskalator-Stunden. Erkennt Stufenrisse, Kantenausfransung, Plattenversatz und Fremdkörper — markenübergreifend, stationenübergreifend.',
+      how_f2_s1:'Patent angemeldet', how_f2_s2:'On-Prem-Inferenz',
+      how_f3_step:'Klassifizieren', how_f3_title:'Vierstufiger Alarm',
+      how_f3_body:'Jedes Ereignis wird von Routinemeldung bis Not-Stopp eingestuft. Schwellenwerte pro Standort, pro Betreiber, pro Schicht konfigurierbar — Fehlalarme bleiben aus der Warteschlange.',
+      how_f3_s1:'L1-Hinweis → L4-Stopp', how_f3_s2:'Betreiber-justierbar',
+      how_f4_step:'Entscheiden', how_f4_title:'Asset-Plattform',
+      how_f4_body:'Eine mehrsprachige Webplattform zeigt jeden Eskalator Ihrer Flotte — mit KPIs, Techniker-Dispatch, exportierbaren EN-115-Berichten und einer ROI-Verfolgung, die Ihr CFO tatsächlich liest.',
+      pf_eyebrow: 'Die Stepguard-Plattform',
+      pf_title: 'Ein Leitstand für jeden Eskalator, den Sie betreiben.',
+      pf_lede: 'Sieben dedizierte Seiten — unten live eingebettet. Klicken Sie auf einen Menüpunkt, wechseln Sie die Sprache, filtern Sie Alarme nach Schwere, öffnen Sie einen Vorfall. Die Buttons sind echt.',
+      ind_eyebrow:'Gebaut für', ind_title:'Wo ein stehender Eskalator ein messbares Problem ist.',
+      ind_1_h:'Öffentlicher Verkehr', ind_1_p:'MVG, BVG, FVG, Deutsche Bahn, NS. Netze mit Hunderten von Eskalatoren unter Dauerlast. Allein MVG betreibt 772.', ind_1_t:'→ Ankersegment',
+      ind_2_h:'Flughäfen', ind_2_p:'Deutschland betreibt 32 Verkehrsflughäfen. Frankfurt, Düsseldorf und Berlin bewegen täglich Millionen Passagiere durch eskalator-abhängige Flüsse.', ind_2_t:'→ Hohe Verfügbarkeit',
+      ind_3_h:'Einkaufszentren', ind_3_p:'ECE Group, Deutschlands größter Center-Betreiber. IKEA, Galeria Kaufhof. Besucherstrom direkt an Umsatz pro Quadratmeter gekoppelt.', ind_3_t:'→ Umsatzschutz',
+      ind_4_h:'Stadien & Venues', ind_4_p:'Messe Berlin, München, Frankfurt. Konzentrierte Ausstromfenster — wenn 40.000 Menschen gleichzeitig hinausgehen, wird ein gestoppter Eskalator zum Sicherheitsfall.', ind_4_t:'→ Crowd Flow',
+      roi_eyebrow:'Die Ökonomie', roi_title:'Amortisiert sich ab dem ersten verhinderten Ausfall.',
+      roi_lede:'Ein Not-Stufenwechsel kostet bis zu <strong style="color:var(--text)">€80.000</strong> allein an Material — ohne Stillstand, entgangene Tickets, Techniker-Überstunden oder SLA-Strafen. Stepguard erkennt das Verschleißmuster Wochen früher und macht daraus eine geplante Tagschicht.',
+      roi_cta_1:'ROI berechnen\u00A0', roi_cta_2:'Compliance-Brief ansehen',
+      roi_good_tag:'Mit Stepguard', roi_good_sub:'Einmalig pro Eskalator<br/>+ €1.000 / Jahr Software',
+      roi_good_1:'Verschleiß Wochen im Voraus erkannt', roi_good_2:'Geplante Tagschicht-Wartung', roi_good_3:'Echtzeit-Flotten-KPIs', roi_good_4:'Stufen-Lebensdauer verlängert',
+      roi_bad_tag:'Reaktive Reparatur', roi_bad_sub:'Pro Notfall, nur Material<br/>exkl. Stillstand und SLAs',
+      roi_bad_1:'Stufenbruch mit Passagieren an Bord', roi_bad_2:'Techniker-Dispatch außerhalb der Geschäftszeiten', roi_bad_3:'1–3 Wochen außer Betrieb', roi_bad_4:'Haftungs- und Reputationskosten',
+      comp_eyebrow:'Für europäische Infrastruktur gebaut', comp_title:'Compliant by Design — nicht durch Retrofit.',
+      comp_lede:'Stepguard wird als Monitoring-Add-on installiert. Der Eskalator selbst wird nie modifiziert. Damit bleibt die bestehende CE-Erklärung intakt und der Weg mit TÜV, BDSG und den relevanten Aufsichtsbehörden ist frei.',
+      badge_1_n:'Eskalator-Norm', badge_1_d:'Nicht-modifizierender Add-on. Bestehende Sicherheitskette, Bremskreis und EN-115-Konformität unverändert.',
+      badge_2_n:'CE-Erklärung bleibt gültig', badge_2_d:'Die Sensorbox ist ein passives Überwachungsgerät. Die CE-Erklärung des Eskalators bleibt nach der Installation gültig.',
+      badge_3_n:'Notified-Body-ready', badge_3_d:'Hochrisiko-Klassifikation erwartet. Notified-Body-Bewertung im Kommerzialisierungsplan verankert.',
+      badge_4_n:'EU-Datenresidenz', badge_4_d:'EU-gehostet, mehrsprachige Oberfläche und Berichte. 85% der deutschen Betreiber sehen Datenschutz als größte AI-Sorge.',
+      cta_title:'Starten Sie einen Pilot auf drei Eskalatoren. Sehen Sie den Unterschied in 90 Tagen.',
+      cta_body:'Wir rollen Pilote mit Verkehrsbetrieben in der DACH-Region und den Niederlanden aus. Erzählen Sie uns von Ihrem Netz und wir melden uns innerhalb von zwei Werktagen mit einem abgesteckten Piloten — vergünstigte Hardware, leistungsabhängige Bepreisung, vollständiger Referenz-Build.',
+      cta_ph_name:'Vorname', cta_ph_company:'Betreiber / Unternehmen', cta_ph_email:'Geschäftliche E-Mail', cta_ph_size:'Netzgröße — ca. Anzahl Eskalatoren',
+      cta_submit:'Demo anfragen\u00A0', cta_hint:'Wir antworten auf Deutsch, Englisch oder Niederländisch — Ihre Wahl.',
+      cta_thanks:'Danke — wir melden uns',
+      foot_blurb:'Stepguard B.V. — ein Cboost-Spin-off. Vorausschauende Eskalator-Überwachung, gebaut in den Niederlanden, in ganz Europa ausgerollt. Patent angemeldet.',
+      foot_h_product:'Produkt', foot_h_company:'Unternehmen', foot_h_contact:'Kontakt',
+      foot_about:'Über uns', foot_cboost:'Cboost-Gruppe', foot_careers:'Karriere', foot_press:'Presse',
+      foot_made:'Vorausschauende Überwachung für europäische Infrastruktur', foot_operational:'operational',
+    },
+  };
+
+  // Snapshot Dutch (DOM) on load so we can restore when switching back to NL
+  const SITE_NL_SNAPSHOT = {
+    // HUD scene strings — not in the DOM initially (set by the scene cycler)
+    hud_t1: 'Trede-integriteitsscan · Niveau 1',
+    hud_s1: 'Niveau 1 — Alle treden nominaal · 0 afwijkingen',
+    hud_t2: 'Trede-integriteitsscan · Niveau 2',
+    hud_s2: 'Niveau 2 — Trede-slijtage gedetecteerd · Trede 09',
+    hud_t3: 'Trede-integriteitsscan · Niveau 3',
+    hud_s3: 'Niveau 3 — Oppervlaktebreuk · Trede 09 · Trede 11',
+    cta_thanks: 'Bedankt — we nemen contact op',
+  };
+  const SITE_NL_PH = {};
+  function snapshotNL(){
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.dataset.i18n;
+      if (k in SITE_NL_SNAPSHOT) return;
+      SITE_NL_SNAPSHOT[k] = el.dataset.i18nHtml ? el.innerHTML : el.textContent;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      SITE_NL_PH[el.dataset.i18nPh] = el.placeholder;
+    });
+  }
+  function applyLang(lang){
+    const dict = lang === 'nl' ? null : SITE_I18N[lang];
+    document.documentElement.lang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const k = el.dataset.i18n;
+      const txt = dict ? (dict[k] != null ? dict[k] : SITE_NL_SNAPSHOT[k]) : SITE_NL_SNAPSHOT[k];
+      if (txt == null) return;
+      if (el.dataset.i18nHtml) el.innerHTML = txt;
+      else el.textContent = txt;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+      const k = el.dataset.i18nPh;
+      const txt = dict ? (dict[k] != null ? dict[k] : SITE_NL_PH[k]) : SITE_NL_PH[k];
+      if (txt != null) el.placeholder = txt;
+    });
+    // Update the toolbar pills
+    document.querySelectorAll('#siteLang button').forEach(b => {
+      b.classList.toggle('on', b.dataset.lang === lang);
+    });
+    // Re-paint the ticker in the selected language
+    if (typeof window.__tickerPaint === 'function') window.__tickerPaint(lang);
+    try { localStorage.setItem('sg_site_lang', lang); } catch(_){}
+  }
+  window.__i18n_t = (k) => {
+    const lang = document.documentElement.lang || 'nl';
+    if (lang === 'nl') return SITE_NL_SNAPSHOT[k] != null ? SITE_NL_SNAPSHOT[k] : k;
+    return (SITE_I18N[lang] && SITE_I18N[lang][k]) || SITE_NL_SNAPSHOT[k] || k;
+  };
+
+  // Wire up pills + restore from localStorage
+  snapshotNL();
+  document.querySelectorAll('#siteLang button').forEach(b => {
+    b.addEventListener('click', () => applyLang(b.dataset.lang));
+  });
+  let savedLang = 'nl';
+  try { savedLang = localStorage.getItem('sg_site_lang') || 'nl'; } catch(_){}
+  if (savedLang !== 'nl') applyLang(savedLang);
+
+  // ---- Nav scroll state ----
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 8);
+  }, { passive: true });
+
+  // ---- Build steps in hero SVG ----
+  (function buildSteps(){
+    const g = document.getElementById('steps');
+    if (!g) return;
+    // We draw 11 steps going diagonally up-right
+    // Origin (40, 80) in svg, so place steps starting from bottom-left
+    const stepCount = 11;
+    const baseX = 10, baseY = 380; // bottom of staircase area (relative to translate)
+    const stepW = 46, stepH = 12, dx = 38, dy = -34;
+    for (let i = 0; i < stepCount; i++){
+      const x = baseX + i * dx;
+      const y = baseY + i * dy;
+      // step polygon (top + side face)
+      const poly = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      const d = `M ${x} ${y} L ${x+stepW} ${y} L ${x+stepW} ${y+stepH} L ${x} ${y+stepH} Z`;
+      poly.setAttribute('d', d);
+      poly.setAttribute('fill', 'url(#stepGrad)');
+      poly.setAttribute('stroke', 'url(#stepEdge)');
+      poly.setAttribute('stroke-width', '.8');
+      g.appendChild(poly);
+
+      // riser
+      const riser = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      riser.setAttribute('d', `M ${x+stepW} ${y} L ${x+stepW+dx*.18} ${y - 12}`);
+      riser.setAttribute('stroke', 'rgba(123,215,255,.18)');
+      riser.setAttribute('stroke-width', '1');
+      g.appendChild(riser);
+
+      // step number tick
+      const tx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tx.setAttribute('x', x+2); tx.setAttribute('y', y-2);
+      tx.setAttribute('font-family', 'JetBrains Mono');
+      tx.setAttribute('font-size', '6');
+      tx.setAttribute('fill', 'rgba(123,215,255,.4)');
+      tx.setAttribute('letter-spacing', '0.5');
+      tx.setAttribute('data-step-label', String(14 - i));
+      tx.textContent = String(14 - i).padStart(2,'0');
+      g.appendChild(tx);
+
+      // wear marker placeholder — driven by scene cycler
+      const wear = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      wear.setAttribute('x', x + 18); wear.setAttribute('y', y + 2);
+      wear.setAttribute('width', 18); wear.setAttribute('height', 7);
+      wear.setAttribute('rx', '1');
+      wear.setAttribute('data-wear-for', String(14 - i));
+      wear.setAttribute('opacity', '0');
+      wear.setAttribute('fill', '#F5C24D');
+      g.appendChild(wear);
+    }
+  })();
+
+  // ---- Laser sweep animation ----
+  (function laser(){
+    const beam = document.getElementById('laserBeam');
+    const dot = document.getElementById('laserDot');
+    if (!beam) return;
+    // Steps centers along diagonal — approximate target points
+    const targets = [];
+    for (let i = 0; i < 11; i++){
+      // Same math as buildSteps but in svg coordinates with translate(40,80)
+      const x = 40 + 10 + i * 38 + 23;
+      const y = 80 + 380 + i * -34 + 6;
+      targets.push([x,y]);
+    }
+    let idx = 0;
+    let t = 0;
+    function tick(){
+      t += 0.012;
+      if (t >= 1){
+        t = 0;
+        idx = (idx + 1) % targets.length;
+      }
+      const from = targets[idx];
+      const to = targets[(idx + 1) % targets.length];
+      const x = from[0] + (to[0] - from[0]) * t;
+      const y = from[1] + (to[1] - from[1]) * t;
+      const ox = 88, oy = 470;
+      beam?.setAttribute('d', `M ${ox} ${oy} L ${x} ${y}`);
+      const path2 = beam.nextElementSibling;
+      path2?.setAttribute('d', `M ${ox} ${oy} L ${x} ${y}`);
+      dot?.setAttribute('cx', x);
+      dot?.setAttribute('cy', y);
+      dot?.nextElementSibling?.setAttribute('cx', x);
+      dot?.nextElementSibling?.setAttribute('cy', y);
+      requestAnimationFrame(tick);
+    }
+    tick();
+  })();
+
+  // ---- Hero pilot scene cycler (cycles Level 1 → 2 → 3) ----
+  (function pilotScenes(){
+    const hud = document.querySelector('.hero-stage .hud');
+    const title = document.getElementById('hudTitle');
+    const status = document.getElementById('hudStatus');
+    const levels = document.getElementById('hudLevels');
+    const stepsG = document.getElementById('steps');
+    if (!hud || !title || !status || !levels || !stepsG) return;
+
+    const wearRects = stepsG.querySelectorAll('rect[data-wear-for]');
+    const stepLabels = stepsG.querySelectorAll('text[data-step-label]');
+
+    // Scenes describe: HUD title/status, level pip, and wear markers per step
+    // Text comes from i18n keys (set by language switcher)
+    const scenes = [
+      {
+        level: 1,
+        titleKey: 'hud_t1',
+        statusKey: 'hud_s1',
+        wear: {},
+        highlightSteps: []
+      },
+      {
+        level: 2,
+        titleKey: 'hud_t2',
+        statusKey: 'hud_s2',
+        wear: { 9: { fill: '#F5C24D', opacity: .65 } },
+        highlightSteps: [9]
+      },
+      {
+        level: 3,
+        titleKey: 'hud_t3',
+        statusKey: 'hud_s3',
+        wear: {
+          9:  { fill: '#FF6A3D', opacity: .85, w: 22 },
+          11: { fill: '#FF6A3D', opacity: .7,  w: 14 }
+        },
+        highlightSteps: [9, 11]
+      }
+    ];
+
+    let i = 0;
+    function apply(scene){
+      hud.setAttribute('data-level', scene.level);
+      const ti = (window.__i18n_t || ((k)=>k));
+      title.textContent = ti(scene.titleKey);
+      status.textContent = ti(scene.statusKey);
+      // remember keys so the language switcher can re-translate on the fly
+      title.dataset.i18n = scene.titleKey;
+      status.dataset.i18n = scene.statusKey;
+
+      // Level pips
+      levels.querySelectorAll('.lv').forEach(el => {
+        const lv = +el.dataset.lv;
+        el.classList.toggle('on', lv <= scene.level);
+      });
+
+      // Wear rects — reset all, then apply scene wear
+      wearRects.forEach(r => {
+        const stepNum = +r.dataset.wearFor;
+        const w = scene.wear[stepNum];
+        if (w){
+          r.setAttribute('fill', w.fill);
+          if (w.w) r.setAttribute('width', w.w);
+          else r.setAttribute('width', 18);
+          // animate in
+          r.style.transition = 'opacity .5s ease';
+          r.setAttribute('opacity', w.opacity);
+        } else {
+          r.style.transition = 'opacity .5s ease';
+          r.setAttribute('opacity', 0);
+        }
+      });
+
+      // Step number highlight
+      stepLabels.forEach(t => {
+        const stepNum = +t.dataset.stepLabel;
+        const highlighted = scene.highlightSteps.includes(stepNum);
+        t.setAttribute('fill', highlighted
+          ? (scene.level === 3 ? '#FF6A3D' : '#FFC74D')
+          : 'rgba(123,215,255,.4)');
+      });
+    }
+
+    apply(scenes[0]);
+    setInterval(() => {
+      i = (i + 1) % scenes.length;
+      apply(scenes[i]);
+    }, 3200);
+  })();
+  (function ticker(){
+    const itemsByLang = {
+      nl: [
+        ['37.455', 'actieve roltrappen · Duitsland · ELA 2023'],
+        ['772', 'roltrappen die alleen MVG al beheert'],
+        ['€80.000', 'gem. spoedreparatie · alleen materiaal'],
+        ['50+', 'roltrap-storingen · Berlin Hbf · 12 mrt 2026'],
+        ['43%', 'van Duitse bedrijven noemt voorspellend onderhoud als #1 AI-toepassing'],
+        ['85%', 'van Duitse bedrijven ziet gegevensbescherming als grootste AI-zorg'],
+        ['EN 115', 'norm behouden — niet-modificerende add-on'],
+        ['EU AI Act', 'notified-body-beoordeling vanaf januari 2027'],
+      ],
+      en: [
+        ['37,455', 'active escalators · Germany · ELA 2023'],
+        ['772', 'escalators operated by MVG alone'],
+        ['€80,000', 'avg. emergency repair · materials only'],
+        ['50+', 'escalator failures · Berlin Hbf · 12 Mar 2026'],
+        ['43%', 'of German firms rate predictive maintenance as #1 AI use case'],
+        ['85%', 'of German firms rank data protection as top AI concern'],
+        ['EN 115', 'standard preserved — non-modifying add-on'],
+        ['EU AI Act', 'notified-body assessment from Jan 2027'],
+      ],
+      de: [
+        ['37.455', 'aktive Eskalatoren · Deutschland · ELA 2023'],
+        ['772', 'Eskalatoren allein im Betrieb der MVG'],
+        ['€80.000', 'Ø Notreparatur · nur Material'],
+        ['50+', 'Eskalator-Ausfälle · Berlin Hbf · 12. März 2026'],
+        ['43%', 'der dt. Unternehmen sehen Predictive Maintenance als Top-AI-Use-Case'],
+        ['85%', 'der dt. Unternehmen nennen Datenschutz als größte AI-Sorge'],
+        ['EN 115', 'Norm erhalten — nicht-modifizierender Add-on'],
+        ['EU AI Act', 'Notified-Body-Bewertung ab Januar 2027'],
+      ],
+    };
+    const track = document.getElementById('ticker');
+    if (!track) return;
+    function paint(lang){
+      const items = itemsByLang[lang] || itemsByLang.nl;
+      const html = items.map(([k,v]) => `<div><span>${k}</span>${v}</div>`).join('');
+      track.innerHTML = html + html;
+    }
+    paint(document.documentElement.lang || 'nl');
+    window.__tickerPaint = paint; // hook for language switcher
+  })();
+
+  // ---- Interactive platform demo ----
+  (function platform(){
+    const $shell = document.getElementById('pfShell');
+    const $main = document.getElementById('pfMain');
+    const $side = document.getElementById('pfSide');
+    const $lang = document.getElementById('pfLang');
+    const $bell = document.getElementById('pfBell');
+    const $notif = document.getElementById('pfNotif');
+    const $crumb = document.getElementById('pfCrumb');
+    const $search = document.getElementById('pfSearch');
+    const $drawer = document.getElementById('pfDrawer');
+    const $drawerBg = document.getElementById('pfDrawerBg');
+    const $toast = document.getElementById('pfToast');
+    const $toastMsg = document.getElementById('pfToastMsg');
+    const $lede = document.getElementById('platform-lede');
+    if (!$main || !$side) return;
+
+    // ---- State ----
+    const state = {
+      page: 'dashboard',
+      lang: 'nl',
+      alarmFilter: 'all',
+      locationSearch: '',
+      notifOpen: false,
+      thresholds: { wear: 60, critical: 85 },
+      toggles: { autoStop: true, gdpr: true, email: true, edgeAi: false },
+    };
+
+    // ---- i18n (chrome only — content stays in operator language) ----
+    const T = {
+      de: { ops:'Betrieb', an:'Analyse', sys:'System',
+        dashboard:'Dashboard', locations:'Standorte', customers:'Kunden', updates:'Aktualisierungen',
+        alarms:'Alarmsystem', impact:'Impact-Bericht', settings:'Einstellungen',
+        online:'Alle Systeme · Online', search:'Suchen — Stationen, Eskalatoren …',
+        title_dashboard:'Flotte · Übersicht', sub_dashboard:'Live · zuletzt aktualisiert vor 12 s',
+        title_locations:'Standorte', sub_locations:'14 Standorte · 128 Einheiten',
+        title_customers:'Kunden', sub_customers:'9 aktive Betreiber',
+        title_alarms:'Alarmsystem · 4 Stufen', sub_alarms:'Echtzeit · sortiert nach Schweregrad',
+        title_impact:'Impact-Bericht · Q1 2026', sub_impact:'PDF · CSV · CO₂ · SDG',
+        title_updates:'Aktualisierungen', sub_updates:'System & Firmware · letzte 30 Tage',
+        title_settings:'Einstellungen', sub_settings:'Sprache · Datenschutz · Schwellenwerte',
+        export:'PDF exportieren', refresh:'Aktualisieren', new_pilot:'Neuer Pilot',
+        notif_title:'Benachrichtigungen', notif_view:'Alle ansehen',
+        ack:'Bestätigen', dispatch:'Techniker entsenden', stop:'Eskalator anhalten',
+        toast_export:'Bericht wird exportiert …', toast_dispatch:'Techniker entsendet · ETA 38 min', toast_ack:'Alarm bestätigt',
+        toast_stop:'Eskalator angehalten · L4-Notabschaltung', toast_lang:'Sprache geändert',
+        toast_save:'Einstellungen gespeichert', toast_refresh:'Daten aktualisiert',
+      },
+      en: { ops:'Operations', an:'Analytics', sys:'System',
+        dashboard:'Dashboard', locations:'Locations', customers:'Customers', updates:'Updates',
+        alarms:'Alarm system', impact:'Impact report', settings:'Settings',
+        online:'All systems · online', search:'Search — stations, escalators …',
+        title_dashboard:'Fleet overview', sub_dashboard:'Live · last sync 12 s ago',
+        title_locations:'Locations', sub_locations:'14 sites · 128 units',
+        title_customers:'Customers', sub_customers:'9 active operators',
+        title_alarms:'Alarm system · 4 levels', sub_alarms:'Real-time · sorted by severity',
+        title_impact:'Impact report · Q1 2026', sub_impact:'PDF · CSV · CO₂ · SDG',
+        title_updates:'Updates', sub_updates:'System & firmware · last 30 days',
+        title_settings:'Settings', sub_settings:'Language · privacy · thresholds',
+        export:'Export PDF', refresh:'Refresh', new_pilot:'New pilot',
+        notif_title:'Notifications', notif_view:'View all',
+        ack:'Acknowledge', dispatch:'Dispatch technician', stop:'Stop escalator',
+        toast_export:'Exporting report …', toast_dispatch:'Technician dispatched · ETA 38 min', toast_ack:'Alarm acknowledged',
+        toast_stop:'Escalator stopped · L4 emergency', toast_lang:'Language switched',
+        toast_save:'Settings saved', toast_refresh:'Data refreshed',
+      },
+      nl: { ops:'Operatie', an:'Analyse', sys:'Systeem',
+        dashboard:'Dashboard', locations:'Locaties', customers:'Klanten', updates:'Updates',
+        alarms:'Alarmsysteem', impact:'Impact-rapport', settings:'Instellingen',
+        online:'Alle systemen · online', search:'Zoeken — stations, roltrappen …',
+        title_dashboard:'Vloot · overzicht', sub_dashboard:'Live · laatste sync 12 s geleden',
+        title_locations:'Locaties', sub_locations:'14 sites · 128 eenheden',
+        title_customers:'Klanten', sub_customers:'9 actieve operators',
+        title_alarms:'Alarmsysteem · 4 niveaus', sub_alarms:'Real-time · op ernst gesorteerd',
+        title_impact:'Impact-rapport · Q1 2026', sub_impact:'PDF · CSV · CO₂ · SDG',
+        title_updates:'Updates', sub_updates:'Systeem & firmware · laatste 30 dagen',
+        title_settings:'Instellingen', sub_settings:'Taal · privacy · drempels',
+        export:'Exporteer PDF', refresh:'Vernieuwen', new_pilot:'Nieuwe pilot',
+        notif_title:'Meldingen', notif_view:'Bekijk alles',
+        ack:'Bevestigen', dispatch:'Monteur sturen', stop:'Roltrap stoppen',
+        toast_export:'Rapport wordt geëxporteerd …', toast_dispatch:'Monteur onderweg · ETA 38 min', toast_ack:'Alarm bevestigd',
+        toast_stop:'Roltrap gestopt · L4-noodstop', toast_lang:'Taal gewisseld',
+        toast_save:'Instellingen opgeslagen', toast_refresh:'Gegevens vernieuwd',
+      },
+    };
+    const t = (k) => T[state.lang][k] || k;
+
+    // ---- Data ----
+    const alarms = [
+      { id:'A-2208', level:4, title:'Tredebreuk — directe uitschakeling vereist', where:'Amsterdam Centraal · Perron 3 · Trede 22', op:'NS', wear:100, time:'14:08', ago:'2 min.', unit:'SG-04-A', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'AMS-CS' },
+      { id:'A-2207', level:3, title:'Sterk versleten tredeoppervlak — ingreep vereist', where:'Rotterdam Centraal · RET Metro · Trede 14', op:'RET', wear:91, time:'13:52', ago:'18 min.', unit:'SG-11-D', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'RTD-CS' },
+      { id:'A-2206', level:2, title:'Tredeslijtage gedetecteerd', where:'Utrecht Centraal · West · Trede 09', op:'NS', wear:72, time:'09:24', ago:'5 uur', unit:'SG-07-B', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'UTR-CS' },
+      { id:'A-2205', level:2, title:'Vreemd voorwerp onder trede', where:'Den Haag Centraal · Zuid · Trede 03', op:'HTM', wear:64, time:'08:11', ago:'6 uur', unit:'SG-13-A', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'DH-CS' },
+      { id:'A-2201', level:1, title:'Routinemelding — reiniging aanbevolen', where:'Schiphol Airport · Plaza · Trede 06', op:'NS / Schiphol', wear:42, time:'gisteren', ago:'1 dag', unit:'SG-09-B', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'SCH-AP' },
+      { id:'A-2197', level:1, title:'Routinemelding — lagersmering gepland', where:'Eindhoven Centraal · NS · Trede 11', op:'NS', wear:38, time:'gisteren', ago:'1 dag', unit:'SG-15-A', model:'sg-vision-v3.2.1', cam:'IDS-UI-5240SE', loc:'EIN-CS' },
+    ];
+
+    const locations = [
+      { id:'AMS-CS', name:'Amsterdam Centraal', op:'NS', city:'Amsterdam', count:24, status:'red', last:'2 actief · L4', x:36, y:30 },
+      { id:'RTD-CS', name:'Rotterdam Centraal', op:'RET', city:'Rotterdam', count:18, status:'amber', last:'1 actief · L3', x:30, y:50 },
+      { id:'UTR-CS', name:'Utrecht Centraal', op:'NS', city:'Utrecht', count:14, status:'amber', last:'1 actief · L2', x:42, y:40 },
+      { id:'DH-CS', name:'Den Haag Centraal', op:'HTM', city:'Den Haag', count:10, status:'amber', last:'1 actief · L2', x:22, y:42 },
+      { id:'SCH-AP', name:'Schiphol Airport', op:'NS / Schiphol', city:'Schiphol', count:9, status:'green', last:'L1 · gisteren', x:30, y:36 },
+      { id:'EIN-CS', name:'Eindhoven Centraal', op:'NS', city:'Eindhoven', count:8, status:'green', last:'L1 · gisteren', x:48, y:64 },
+      { id:'GRN-CS', name:'Groningen Hoofdstation', op:'Arriva', city:'Groningen', count:7, status:'green', last:'—', x:62, y:20 },
+      { id:'MAS-CS', name:'Maastricht Centraal', op:'NS', city:'Maastricht', count:6, status:'green', last:'—', x:54, y:84 },
+    ];
+
+    const customers = [
+      { id:'NS', name:'NS', long:'Nederlandse Spoorwegen', city:'Utrecht · NL', units:64, status:'active', label:'Anker' },
+      { id:'RET', name:'RET', long:'Rotterdamse Electrische Tram', city:'Rotterdam · NL', units:32, status:'active', label:'Actief' },
+      { id:'HTM', name:'HTM', long:'HTM Personenvervoer', city:'Den Haag · NL', units:18, status:'pilot', label:'Pilot' },
+      { id:'GVB', name:'GVB', long:'Gemeente Vervoerbedrijf Amsterdam', city:'Amsterdam · NL', units:24, status:'active', label:'Actief' },
+      { id:'SCH', name:'SCH', long:'Royal Schiphol Group', city:'Schiphol · NL', units:12, status:'active', label:'Actief' },
+      { id:'ARR', name:'ARR', long:'Arriva Nederland', city:'Heerenveen · NL', units:8, status:'pilot', label:'Pilot' },
+      { id:'PB', name:'PB', long:'ProRail B.V.', city:'Utrecht · NL', units:14, status:'pilot', label:'Pilot' },
+      { id:'BVG', name:'BVG', long:'Berliner Verkehrsbetriebe', city:'Berlijn · DE', units:11, status:'pilot', label:'Pilot' },
+      { id:'MVG', name:'MVG', long:'Münchner Verkehrsgesellschaft', city:'München · DE', units:6, status:'pilot', label:'Pilot' },
+    ];
+
+    const updates = [
+      { when:'Vandaag · 14:08', kind:'incident', what:'L4-alarm geëscaleerd · automatische uitschakeling', loc:'Amsterdam Centraal · SG-04-A' },
+      { when:'Vandaag · 09:14', kind:'ai', what:'AI-vision model bijgewerkt naar v3.2.1', loc:'128 eenheden · NL/DE' },
+      { when:'Gisteren', kind:'calib', what:'Camerakalibratie na reiniging', loc:'Rotterdam Centraal · SG-11-D' },
+      { when:'3 dagen geleden', kind:'firmware', what:'Sensorbox-firmware v2.4 uitgerold', loc:'14 locaties · alle eenheden' },
+      { when:'6 dagen geleden', kind:'ai', what:'Vals-alarm model verfijnd · −12% L2-ruis', loc:'Globale modelupdate' },
+      { when:'11 dagen geleden', kind:'firmware', what:'Edge-inferentie geactiveerd · TNO-conform', loc:'NS Utrecht Centraal · pilot' },
+    ];
+
+    const notifFeed = [
+      { l:4, t:'L4 · Tredebreuk · Amsterdam CS', s:'Perron 3 · Trede 22 · 2 min. geleden', aid:'A-2208' },
+      { l:3, t:'L3 · Tredeoppervlak sterk versleten', s:'Rotterdam Centraal · 18 min. geleden', aid:'A-2207' },
+      { l:2, t:'L2 · Tredeslijtage gedetecteerd', s:'Utrecht Centraal · vandaag 09:24', aid:'A-2206' },
+    ];
+
+    // ---- Helpers ----
+    function toast(msg){
+      $toastMsg.textContent = msg;
+      $toast.classList.add('on');
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=> $toast.classList.remove('on'), 2200);
+    }
+    function openDrawer(html, title){
+      $drawer.innerHTML = `<div class="dh"><h5>${title}</h5><button class="close" aria-label="Close">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button></div><div class="db">${html}</div>`;
+      $drawer.querySelector('.close').addEventListener('click', closeDrawer);
+      $drawer.querySelectorAll('[data-action]').forEach(b => b.addEventListener('click', () => {
+        const a = b.dataset.action;
+        if (a === 'ack') toast(t('toast_ack'));
+        if (a === 'dispatch') toast(t('toast_dispatch'));
+        if (a === 'stop') toast(t('toast_stop'));
+        closeDrawer();
+      }));
+      $drawer.classList.add('on');
+      $drawerBg.classList.add('on');
+    }
+    function closeDrawer(){ $drawer.classList.remove('on'); $drawerBg.classList.remove('on'); }
+
+    function openAlarm(id){
+      const a = alarms.find(x => x.id === id);
+      if (!a) return;
+      const html = `
+        <div class="cam">
+          <span class="corner tl">${a.cam} · LIVE</span>
+          <span class="corner tr">L${a.level} · ${a.wear}%</span>
+          <span class="corner bl">${a.unit}</span>
+          <span class="corner br">${a.time}</span>
+          <div class="step"></div>
+        </div>
+        <ul class="dl">
+          <li><span class="k">Alarm-ID</span><span class="v mono">${a.id}</span></li>
+          <li><span class="k">Niveau</span><span class="v">Level ${a.level}</span></li>
+          <li><span class="k">Operator</span><span class="v">${a.op}</span></li>
+          <li><span class="k">Locatie</span><span class="v">${a.where}</span></li>
+          <li><span class="k">Eenheid</span><span class="v mono">${a.unit}</span></li>
+          <li><span class="k">AI-model</span><span class="v mono">${a.model}</span></li>
+          <li><span class="k">Slijtage-score</span><span class="v mono">${a.wear} / 100</span></li>
+          <li><span class="k">Gedetecteerd</span><span class="v">${a.ago} geleden</span></li>
+        </ul>
+        <div class="da">
+          ${a.level >= 3 ? `<button class="btnx danger" data-action="stop">${t('stop')}</button>` : ''}
+          <button class="btnx primary" data-action="dispatch">${t('dispatch')}</button>
+          <button class="btnx" data-action="ack">${t('ack')}</button>
+        </div>`;
+      openDrawer(html, `Alarm · ${a.id}`);
+    }
+    function openLoc(id){
+      const l = locations.find(x => x.id === id);
+      if (!l) return;
+      const cnt = alarms.filter(a => a.loc === id).length;
+      const html = `
+        <ul class="dl">
+          <li><span class="k">Locatie-ID</span><span class="v mono">${l.id}</span></li>
+          <li><span class="k">Naam</span><span class="v">${l.name}</span></li>
+          <li><span class="k">Operator</span><span class="v">${l.op}</span></li>
+          <li><span class="k">Stad</span><span class="v">${l.city}</span></li>
+          <li><span class="k">Roltrappen</span><span class="v mono">${l.count}</span></li>
+          <li><span class="k">Actieve alarmen</span><span class="v mono">${cnt}</span></li>
+          <li><span class="k">Laatste incident</span><span class="v">${l.last}</span></li>
+          <li><span class="k">Beschikbaarheid (7d)</span><span class="v mono">${(99 + Math.random()*0.9).toFixed(2)}%</span></li>
+        </ul>
+        <div class="da">
+          <button class="btnx primary" data-action="dispatch">${t('dispatch')}</button>
+          <button class="btnx" data-action="ack">Rapport tonen</button>
+        </div>`;
+      openDrawer(html, l.name);
+    }
+
+    // ---- Side nav ----
+    const navItems = [
+      { id:'dashboard', group:'ops', icon:'<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>' },
+      { id:'locations', group:'ops', icon:'<path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 1 1 18 0z"/><circle cx="12" cy="10" r="3"/>' },
+      { id:'customers', group:'ops', icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' },
+      { id:'updates', group:'ops', icon:'<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/>' },
+      { id:'alarms', group:'an', icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><circle cx="12" cy="17" r="1" fill="currentColor"/>', badge: 3 },
+      { id:'impact', group:'an', icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>' },
+      { id:'settings', group:'sys', icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>' },
+    ];
+
+    function renderSide(){
+      let html = '';
+      const groups = [['ops', t('ops')], ['an', t('an')], ['sys', t('sys')]];
+      for (const [g, label] of groups){
+        html += `<div class="grp">${label}</div>`;
+        for (const n of navItems.filter(x => x.group === g)){
+          html += `<button class="pf-nav ${state.page === n.id ? 'active':''}" data-page="${n.id}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+            <span>${t(n.id)}</span>
+            ${n.badge ? `<span class="badge">${n.badge}</span>` : ''}
+          </button>`;
+        }
+      }
+      html += `<div class="pf-foot"><span class="dot"></span><span>${t('online')}</span></div>`;
+      $side.innerHTML = html;
+      $side.querySelectorAll('.pf-nav').forEach(b => b.addEventListener('click', () => setPage(b.dataset.page)));
+    }
+
+    function renderTop(){
+      $crumb.innerHTML = `${t(navItems.find(n => n.id === state.page).group === 'ops' ? 'ops' : navItems.find(n => n.id === state.page).group === 'an' ? 'an' : 'sys')} · <b>${t(state.page)}</b>`;
+      $search.placeholder = t('search');
+      // Lang buttons
+      $lang.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.l === state.lang));
+      // Notification panel
+      $notif.innerHTML = `<h6>${t('notif_title')} <span>${notifFeed.length} actief</span></h6>` +
+        notifFeed.map(n => `<div class="it l${n.l}" data-aid="${n.aid}"><div class="lvl">${n.l}</div><div><div class="t">${n.t}</div><div class="s">${n.s}</div></div></div>`).join('');
+      $notif.querySelectorAll('.it').forEach(it => it.addEventListener('click', () => {
+        state.notifOpen = false; $notif.classList.remove('on');
+        setPage('alarms');
+        setTimeout(() => openAlarm(it.dataset.aid), 60);
+      }));
+      // Section lede (small detail)
+    }
+
+    // ---- Pages ----
+    const pages = {
+      dashboard(){
+        const headerActions = `
+          <button class="btnx" data-act="refresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>${t('refresh')}</button>
+          <button class="btnx primary" data-act="export">${t('export')}</button>`;
+        const recentAlarms = alarms.slice(0, 4).map(a => `
+          <div class="alarm" data-alarm="${a.id}">
+            <div class="lvl l${a.level}">${a.level}</div>
+            <div class="meta"><div class="title">${a.title}</div><div class="sub">${a.where} · ${a.op}</div></div>
+            <div class="time">${a.time}</div>
+            <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>`).join('');
+        const pins = locations.map(l => `<div class="pin ${l.status === 'red'?'red':l.status === 'amber'?'amber':'green'}" style="top:${l.y}%;left:${l.x}%" data-loc="${l.id}"><div class="lab">${l.name} · ${l.count}</div></div>`).join('');
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_dashboard')}</h4><div class="sub">${t('sub_dashboard')}</div></div>
+            <div class="actions">${headerActions}</div>
+          </div>
+          <div class="kpis">
+            <div class="kpi" data-kpi="units"><div class="l">Roltrappen</div><div class="v">128</div><div class="d">↑ 4 nieuw</div></div>
+            <div class="kpi" data-kpi="uptime"><div class="l">Beschikbaarheid</div><div class="v">99.4%</div><div class="d">↑ 0.6%</div></div>
+            <div class="kpi" data-kpi="alarms"><div class="l">Actieve alarmen</div><div class="v">7</div><div class="d bad">2 kritiek</div></div>
+            <div class="kpi" data-kpi="saved"><div class="l">Voorkomen storingen</div><div class="v">23</div><div class="d">Q1 2026</div></div>
+          </div>
+          <div class="pf-row">
+            <div class="pf-panel">
+              <h5>Locatiekaart · Nederland <button class="more" data-act="locations-page">Alles tonen →</button></h5>
+              <div class="sub">${locations.length} locaties · ${locations.reduce((s,l)=>s+l.count,0)} eenheden · klik op een pin</div>
+              <div class="map" id="pfMap">
+                <svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M24 14 C 32 10, 50 8, 66 12 C 76 14, 84 22, 80 32 C 78 38, 70 38, 70 44 C 70 52, 80 60, 76 70 L 60 80 L 58 92 L 52 94 L 48 78 L 32 74 C 18 68, 8 56, 10 42 C 12 28, 18 18, 24 14 Z" fill="rgba(31,169,245,.04)" stroke="rgba(91,208,255,.18)" stroke-width=".4"/></svg>
+                ${pins}
+              </div>
+            </div>
+            <div class="pf-panel">
+              <h5>Recente alarmen <button class="more" data-act="alarms-page">Alles →</button></h5>
+              <div class="sub">Realtime · laatste 24 uur</div>
+              ${recentAlarms}
+            </div>
+          </div>
+          <div class="pf-row evens">
+            <div class="pf-panel">
+              <h5>Beschikbaarheid · 7 dagen</h5>
+              <div class="sub">Weekgemiddelde · trendvergelijking</div>
+              <div class="bars">
+                <div class="bar dim" style="height:62%"></div>
+                <div class="bar dim" style="height:74%"></div>
+                <div class="bar" style="height:88%"></div>
+                <div class="bar" style="height:80%"></div>
+                <div class="bar" style="height:94%"></div>
+                <div class="bar" style="height:90%"></div>
+                <div class="bar" style="height:97%"></div>
+              </div>
+              <div class="bars-x"><span>MA</span><span>DI</span><span>WO</span><span>DO</span><span>VR</span><span>ZA</span><span>ZO</span></div>
+            </div>
+            <div class="pf-panel">
+              <h5>Verdeling alarmen · 30 dagen</h5>
+              <div class="sub">naar ernst</div>
+              <div style="display:flex; align-items:end; gap: 18px; padding-top: 14px; height: 140px;">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; max-width:48px; height:88%; background:linear-gradient(180deg, var(--ok), #1f8a5b); border-radius: 3px 3px 0 0"></div><div style="font-family:var(--mono); font-size:10px; color:var(--muted)">L1 · 86</div></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; max-width:48px; height:46%; background:linear-gradient(180deg, var(--warn), #b8851f); border-radius: 3px 3px 0 0"></div><div style="font-family:var(--mono); font-size:10px; color:var(--muted)">L2 · 41</div></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; max-width:48px; height:20%; background:linear-gradient(180deg, var(--hot), #b34522); border-radius: 3px 3px 0 0"></div><div style="font-family:var(--mono); font-size:10px; color:var(--muted)">L3 · 12</div></div>
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:8px"><div style="width:100%; max-width:48px; height:6%; background:linear-gradient(180deg, var(--laser), #aa1414); border-radius: 3px 3px 0 0; box-shadow: 0 0 12px var(--laser-glow)"></div><div style="font-family:var(--mono); font-size:10px; color:var(--laser)">L4 · 3</div></div>
+              </div>
+            </div>
+          </div>`;
+      },
+
+      locations(){
+        const q = state.locationSearch.toLowerCase().trim();
+        const rows = locations.filter(l => !q || l.name.toLowerCase().includes(q) || l.op.toLowerCase().includes(q) || l.city.toLowerCase().includes(q));
+        const dotColor = (s) => s === 'red' ? 'var(--laser)' : s === 'amber' ? 'var(--warn)' : 'var(--ok)';
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_locations')}</h4><div class="sub">${t('sub_locations')}</div></div>
+            <div class="actions">
+              <button class="btnx" data-act="refresh">${t('refresh')}</button>
+              <button class="btnx primary" data-act="new-pilot">+ ${t('new_pilot')}</button>
+            </div>
+          </div>
+          <div class="tablex locations">
+            <div class="row head">
+              <div>Locatie</div><div>Operator</div><div>Eenheden</div><div>Status</div><div></div>
+            </div>
+            ${rows.map(l => `
+              <div class="row" data-loc="${l.id}">
+                <div class="name">${l.name} <span class="id">· ${l.id}</span></div>
+                <div class="num">${l.op}</div>
+                <div class="num">${l.count}</div>
+                <div class="status"><span class="pd" style="background:${dotColor(l.status)}; box-shadow:0 0 8px ${dotColor(l.status)}"></span>${l.last}</div>
+                <div class="arrow">→</div>
+              </div>`).join('')}
+            ${rows.length === 0 ? '<div class="empty">Geen locaties gevonden voor „' + state.locationSearch + '”</div>' : ''}
+          </div>`;
+      },
+
+      customers(){
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_customers')}</h4><div class="sub">${t('sub_customers')}</div></div>
+            <div class="actions"><button class="btnx primary" data-act="new-pilot">+ ${t('new_pilot')}</button></div>
+          </div>
+          <div class="cust-grid">
+            ${customers.map(c => `
+              <div class="cust" data-cust="${c.id}">
+                <div class="head">
+                  <div class="logo">${c.name}</div>
+                  <div class="pill ${c.status === 'active' ? 'active' : 'pilot'}">${c.label}</div>
+                </div>
+                <div class="name">${c.long}</div>
+                <div class="geo">${c.city}</div>
+                <div class="stats">
+                  <div><b>${c.units}</b>Roltrappen</div>
+                  <div><b>${Math.max(1, Math.round(c.units/12))}</b>Locaties</div>
+                  <div><b>${(99 + Math.random()*0.9).toFixed(1)}%</b>Beschikbaarheid</div>
+                </div>
+              </div>`).join('')}
+          </div>`;
+      },
+
+      alarms(){
+        const filtered = state.alarmFilter === 'all' ? alarms : alarms.filter(a => a.level === parseInt(state.alarmFilter.slice(1)));
+        const counts = [1,2,3,4].map(n => alarms.filter(a => a.level === n).length);
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_alarms')}</h4><div class="sub">${t('sub_alarms')}</div></div>
+            <div class="actions">
+              <button class="btnx" data-act="refresh">${t('refresh')}</button>
+              <button class="btnx primary" data-act="export">${t('export')}</button>
+            </div>
+          </div>
+          <div class="chips">
+            <button class="chip ${state.alarmFilter === 'all' ? 'on' : ''}" data-filter="all"><span class="dot"></span>Alle<span class="ct">${alarms.length}</span></button>
+            <button class="chip l4 ${state.alarmFilter === 'l4' ? 'on' : ''}" data-filter="l4"><span class="dot"></span>L4 · Kritiek<span class="ct">${counts[3]}</span></button>
+            <button class="chip l3 ${state.alarmFilter === 'l3' ? 'on' : ''}" data-filter="l3"><span class="dot"></span>L3 · Urgent<span class="ct">${counts[2]}</span></button>
+            <button class="chip l2 ${state.alarmFilter === 'l2' ? 'on' : ''}" data-filter="l2"><span class="dot"></span>L2 · Waarschuwing<span class="ct">${counts[1]}</span></button>
+            <button class="chip l1 ${state.alarmFilter === 'l1' ? 'on' : ''}" data-filter="l1"><span class="dot"></span>L1 · Melding<span class="ct">${counts[0]}</span></button>
+          </div>
+          <div style="margin-top: 18px">
+            ${filtered.map(a => `
+              <div class="alarm" data-alarm="${a.id}">
+                <div class="lvl l${a.level}">${a.level}</div>
+                <div class="meta">
+                  <div class="title">${a.title}</div>
+                  <div class="sub">${a.where} · ${a.op} · ${a.unit}</div>
+                </div>
+                <div class="time">${a.time}</div>
+                <div class="arrow"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+              </div>`).join('')}
+            ${filtered.length === 0 ? '<div style="padding:40px;text-align:center;color:var(--muted);font-family:var(--mono);font-size:12px">Geen alarmen op dit niveau.</div>' : ''}
+          </div>`;
+      },
+
+      impact(){
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_impact')}</h4><div class="sub">${t('sub_impact')}</div></div>
+            <div class="actions">
+              <button class="btnx" data-act="export-csv">CSV</button>
+              <button class="btnx primary" data-act="export">${t('export')}</button>
+            </div>
+          </div>
+          <div class="kpis">
+            <div class="kpi"><div class="l">Bespaard onderhoud</div><div class="v">€ 412k</div><div class="d">vs. reactieve basis</div></div>
+            <div class="kpi"><div class="l">Voorkomen tredewissels</div><div class="v">68</div><div class="d">≈ 15 t aluminium</div></div>
+            <div class="kpi"><div class="l">CO₂ vermeden</div><div class="v">15.1 t</div><div class="d">222 kg / trede</div></div>
+            <div class="kpi"><div class="l">SDG-bijdrage</div><div class="v">9·11·12·13</div><div class="d">NCES-conform</div></div>
+          </div>
+          <div class="pf-row evens">
+            <div class="pf-panel">
+              <h5>Maandelijkse besparingen · 2026</h5>
+              <div class="sub">EUR · vermeden operationele kosten</div>
+              <div class="bars">
+                <div class="bar" style="height:48%"></div>
+                <div class="bar" style="height:62%"></div>
+                <div class="bar" style="height:74%"></div>
+                <div class="bar" style="height:71%"></div>
+                <div class="bar" style="height:85%"></div>
+                <div class="bar dim" style="height:55%"></div>
+              </div>
+              <div class="bars-x"><span>JAN</span><span>FEB</span><span>MRT</span><span>APR</span><span>MEI</span><span>JUN</span></div>
+            </div>
+            <div class="pf-panel">
+              <h5>SDG-uitlijning</h5>
+              <div class="sub">UN Sustainable Development Goals</div>
+              <div class="sdg-grid">
+                <div class="sdg">09</div><div class="sdg">11</div><div class="sdg">12</div><div class="sdg">13</div>
+              </div>
+              <p style="font-size:12px;color:var(--steel);margin-top:14px;line-height:1.5">Industry &amp; infrastructure · Sustainable cities · Responsible consumption · Climate action</p>
+            </div>
+          </div>`;
+      },
+
+      updates(){
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_updates')}</h4><div class="sub">${t('sub_updates')}</div></div>
+            <div class="actions"><button class="btnx" data-act="refresh">${t('refresh')}</button></div>
+          </div>
+          <div class="timeline">
+            ${updates.map(u => `
+              <div class="tl-item ${u.kind}" data-upd="${u.kind}">
+                <div class="when">${u.when} · ${u.kind === 'firmware' ? 'Firmware' : u.kind === 'ai' ? 'AI-model' : u.kind === 'calib' ? 'Kalibratie' : 'Incident'}</div>
+                <div class="what">${u.what}</div>
+                <div class="where">${u.loc}</div>
+              </div>`).join('')}
+          </div>`;
+      },
+
+      settings(){
+        return `
+          <div class="pf-page-head">
+            <div><h4>${t('title_settings')}</h4><div class="sub">${t('sub_settings')}</div></div>
+            <div class="actions"><button class="btnx primary" data-act="save">Opslaan</button></div>
+          </div>
+          <div class="settings">
+            <div class="setting">
+              <div class="srow">
+                <div><label>Interface-taal</label><div class="desc">Platform-interface en automatische e-mails. Rapporten worden los geëxporteerd.</div></div>
+                <div class="lang-pick">
+                  <button class="${state.lang === 'nl' ? 'on' : ''}" data-l="nl">NL</button>
+                  <button class="${state.lang === 'en' ? 'on' : ''}" data-l="en">EN</button>
+                  <button class="${state.lang === 'de' ? 'on' : ''}" data-l="de">DE</button>
+                </div>
+              </div>
+            </div>
+            <div class="setting">
+              <div class="srow">
+                <div><label>Automatische uitschakeling bij L4</label><div class="desc">Stopt de roltrap automatisch bij detectie van een kritiek defect. EU-AI-Act-conform: menselijk toezicht blijft vereist.</div></div>
+                <button class="toggle ${state.toggles.autoStop ? 'on' : ''}" data-tg="autoStop" aria-label="autostop"></button>
+              </div>
+            </div>
+            <div class="setting">
+              <div class="srow">
+                <div><label>AVG / GDPR · EU-dataresidentie</label><div class="desc">Alle data blijft op EU-servers. Anonimisering van personen in beeld is actief.</div></div>
+                <button class="toggle ${state.toggles.gdpr ? 'on' : ''}" data-tg="gdpr" aria-label="gdpr"></button>
+              </div>
+            </div>
+            <div class="setting">
+              <div class="srow">
+                <div><label>E-mailmeldingen</label><div class="desc">Dagelijkse samenvatting om 07:00 · directe melding vanaf L3.</div></div>
+                <button class="toggle ${state.toggles.email ? 'on' : ''}" data-tg="email" aria-label="email"></button>
+              </div>
+            </div>
+            <div class="setting">
+              <div class="srow">
+                <div><label>Edge-AI · inferentie op locatie</label><div class="desc">AI draait op de sensorbox. Geen videodata verlaat de locatie.</div></div>
+                <button class="toggle ${state.toggles.edgeAi ? 'on' : ''}" data-tg="edgeAi" aria-label="edge"></button>
+              </div>
+            </div>
+            <div class="setting">
+              <label>Drempelwaarde · tredeslijtage</label>
+              <div class="desc">L2-waarschuwing vanaf deze slijtage-score. Standaard: 60.</div>
+              <div class="slider-row">
+                <input type="range" min="20" max="95" value="${state.thresholds.wear}" data-sl="wear"/>
+                <div class="val" id="valWear">${state.thresholds.wear}</div>
+              </div>
+            </div>
+            <div class="setting">
+              <label>Drempelwaarde · kritiek defect</label>
+              <div class="desc">L4 automatische uitschakeling vanaf deze slijtage-score. Standaard: 85.</div>
+              <div class="slider-row">
+                <input type="range" min="60" max="100" value="${state.thresholds.critical}" data-sl="critical"/>
+                <div class="val" id="valCritical">${state.thresholds.critical}</div>
+              </div>
+            </div>
+          </div>`;
+      },
+    };
+
+    // ---- Render & wire up ----
+    function setPage(p){ state.page = p; state.notifOpen = false; $notif.classList.remove('on'); closeDrawer(); render(); }
+    function setLang(l){ state.lang = l; toast(t('toast_lang')); render(); }
+    function setFilter(f){ state.alarmFilter = f; render(); }
+
+    function attachPageHandlers(){
+      $main.querySelectorAll('[data-alarm]').forEach(el => el.addEventListener('click', () => openAlarm(el.dataset.alarm)));
+      $main.querySelectorAll('[data-loc]').forEach(el => el.addEventListener('click', () => openLoc(el.dataset.loc)));
+      $main.querySelectorAll('[data-cust]').forEach(el => el.addEventListener('click', () => toast('Klantgegevens openen — ' + el.dataset.cust)));
+      $main.querySelectorAll('[data-filter]').forEach(el => el.addEventListener('click', () => setFilter(el.dataset.filter)));
+      $main.querySelectorAll('[data-upd]').forEach(el => el.addEventListener('click', () => toast('Update-details: ' + el.dataset.upd)));
+      $main.querySelectorAll('[data-kpi]').forEach(el => el.addEventListener('click', () => {
+        const map = { units:'locations', uptime:'dashboard', alarms:'alarms', saved:'impact' };
+        if (map[el.dataset.kpi] && map[el.dataset.kpi] !== state.page) setPage(map[el.dataset.kpi]);
+      }));
+      $main.querySelectorAll('[data-act]').forEach(el => el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const a = el.dataset.act;
+        if (a === 'refresh') toast(t('toast_refresh'));
+        if (a === 'export' || a === 'export-csv') toast(t('toast_export'));
+        if (a === 'save') toast(t('toast_save'));
+        if (a === 'new-pilot') toast('+ Nieuwe pilot · formulier geopend');
+        if (a === 'locations-page') setPage('locations');
+        if (a === 'alarms-page') setPage('alarms');
+      }));
+      // Settings interactions
+      $main.querySelectorAll('.lang-pick button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.l)));
+      $main.querySelectorAll('.toggle').forEach(t => t.addEventListener('click', () => {
+        const k = t.dataset.tg;
+        state.toggles[k] = !state.toggles[k];
+        t.classList.toggle('on', state.toggles[k]);
+      }));
+      $main.querySelectorAll('input[type=range]').forEach(s => s.addEventListener('input', (e) => {
+        const k = s.dataset.sl;
+        state.thresholds[k] = parseInt(e.target.value);
+        const v = $main.querySelector('#val' + k.charAt(0).toUpperCase() + k.slice(1));
+        if (v) v.textContent = state.thresholds[k];
+      }));
+    }
+
+    function render(){
+      renderSide();
+      renderTop();
+      $main.innerHTML = pages[state.page]();
+      attachPageHandlers();
+    }
+
+    // ---- Top bar handlers ----
+    $lang.querySelectorAll('button').forEach(b => b.addEventListener('click', () => setLang(b.dataset.l)));
+    $bell.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.notifOpen = !state.notifOpen;
+      $notif.classList.toggle('on', state.notifOpen);
+    });
+    document.addEventListener('click', (e) => {
+      if (state.notifOpen && !$bell.contains(e.target) && !$notif.contains(e.target)){
+        state.notifOpen = false; $notif.classList.remove('on');
+      }
+    });
+    $search.addEventListener('input', (e) => {
+      state.locationSearch = e.target.value;
+      if (state.page === 'locations') render();
+      else if (e.target.value && state.page !== 'locations') setPage('locations');
+    });
+    $drawerBg.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDrawer(); });
+
+    render();
+  })();
+
+  // ---- Reveal on scroll ----
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target);} });
+  }, { threshold: .08, rootMargin: '0px 0px -60px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+<!-- ===== Tweaks · theme picker ===== -->
+<script>
+  // Persisted defaults. Host rewrites the block between EDITMODE markers when the user picks a theme.
+  window.__SG_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "theme": "midnight"
+  }/*EDITMODE-END*/;
+
+  // Apply persisted theme inline, before React mounts, so there is no flash.
+  (function bootTheme(){
+    var THEME_VARS = {
+      midnight:{'--bg':'#04070c','--bg-2':'#070b12','--surface':'#0b1119','--surface-2':'#0f1722','--line':'rgba(255,255,255,.07)','--line-strong':'rgba(255,255,255,.14)','--text':'#E8EEF5','--muted':'#8493A8','--dim':'#5A6776','--steel':'#BCC8D6','--accent':'#1FA9F5','--accent-2':'#5BD0FF','--accent-deep':'#0a4d77','--laser':'#FF2A2A','--laser-glow':'rgba(255,42,42,.6)','--ok':'#38D38A','--warn':'#F5C24D','--hot':'#FF6A3D'},
+      amber:{'--bg':'#0d0907','--bg-2':'#14100c','--surface':'#1a1410','--surface-2':'#221a14','--line':'rgba(255,230,200,.07)','--line-strong':'rgba(255,230,200,.14)','--text':'#F3EDE5','--muted':'#A89C8A','--dim':'#6E6354','--steel':'#D4C8B6','--accent':'#F59E0B','--accent-2':'#FCD34D','--accent-deep':'#783F0B','--laser':'#FF3838','--laser-glow':'rgba(255,56,56,.6)','--ok':'#84CC16','--warn':'#F5C24D','--hot':'#FB7185'},
+      forest:{'--bg':'#04100c','--bg-2':'#061814','--surface':'#0a1f1a','--surface-2':'#102b24','--line':'rgba(180,240,210,.07)','--line-strong':'rgba(180,240,210,.14)','--text':'#E5F2EC','--muted':'#7E9B91','--dim':'#4F6A60','--steel':'#B8D4C6','--accent':'#14B886','--accent-2':'#4ADE80','--accent-deep':'#0a5840','--laser':'#FB3A3A','--laser-glow':'rgba(251,58,58,.6)','--ok':'#38D38A','--warn':'#F5C24D','--hot':'#FF6A3D'},
+      crimson:{'--bg':'#0a0a0a','--bg-2':'#111111','--surface':'#161616','--surface-2':'#1c1c1c','--line':'rgba(255,255,255,.06)','--line-strong':'rgba(255,255,255,.12)','--text':'#EDEDED','--muted':'#888888','--dim':'#555555','--steel':'#C0C0C0','--accent':'#DC2626','--accent-2':'#F87171','--accent-deep':'#6B0F0F','--laser':'#DC2626','--laser-glow':'rgba(220,38,38,.6)','--ok':'#A3A3A3','--warn':'#D4D4D4','--hot':'#F87171'},
+      plum:{'--bg':'#08050f','--bg-2':'#0e0a16','--surface':'#14101e','--surface-2':'#1c1730','--line':'rgba(220,210,255,.07)','--line-strong':'rgba(220,210,255,.14)','--text':'#ECE8F5','--muted':'#9489A8','--dim':'#5F557A','--steel':'#C8BDD6','--accent':'#8B5CF6','--accent-2':'#C4B5FD','--accent-deep':'#4C1D95','--laser':'#FF2A6A','--laser-glow':'rgba(255,42,106,.6)','--ok':'#34D399','--warn':'#FBBF24','--hot':'#F472B6'},
+      paper:{'--bg':'#F4F1EC','--bg-2':'#ECE7DE','--surface':'#FFFFFF','--surface-2':'#F8F4EC','--line':'rgba(15,25,40,.08)','--line-strong':'rgba(15,25,40,.18)','--text':'#14181D','--muted':'#5A6776','--dim':'#8A96A3','--steel':'#3A4350','--accent':'#0F76C2','--accent-2':'#1FA9F5','--accent-deep':'#084065','--laser':'#C81313','--laser-glow':'rgba(200,19,19,.45)','--ok':'#16A34A','--warn':'#D97706','--hot':'#DC2626'}
+    };
+    var key = window.__SG_TWEAK_DEFAULTS.theme || 'midnight';
+    try { key = localStorage.getItem('sg_theme') || key; } catch(_){}
+    var v = THEME_VARS[key] || THEME_VARS.midnight;
+    var root = document.documentElement;
+    for (var k in v) root.style.setProperty(k, v[k]);
+    root.dataset.theme = key;
+  })();
+</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="themes.jsx"></script>
+</body>
+</html>
