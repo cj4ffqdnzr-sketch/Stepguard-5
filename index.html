@@ -753,6 +753,173 @@
   .col .li .mk{ color: var(--accent-2); font-family: var(--mono); font-size: 10px; width: 14px; flex-shrink: 0;}
   .col.bad .li .mk{ color: var(--hot); }
 
+  /* ---------- ROI Calculator ---------- */
+  .roi-calc{
+    margin-top: 72px;
+    display:grid; grid-template-columns: 1.05fr 1fr; gap: 20px; align-items: stretch;
+  }
+  @media(max-width:900px){ .roi-calc{ grid-template-columns: 1fr; } }
+  .roi-calc-head{ grid-column: 1 / -1; display:flex; align-items:flex-end; justify-content: space-between; gap: 24px; margin-bottom: 8px; }
+  .roi-calc-head h3{
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(22px, 2vw, 28px); margin: 0; letter-spacing: -.015em;
+  }
+  .roi-calc-head .tag{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--accent-2); display:inline-flex; align-items:center; gap: 8px; white-space: nowrap;
+  }
+  .roi-calc-head .tag::before{ content:""; width: 6px; height: 6px; border-radius:50%; background: var(--accent); box-shadow: 0 0 8px var(--accent);}
+  .roi-inputs{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 8px 28px;
+    display:flex; flex-direction: column;
+  }
+  .roi-field{ padding: 18px 0; border-bottom: 1px solid var(--line); display:flex; flex-direction: column; gap: 12px;}
+  .roi-field:last-child{ border-bottom: none; }
+  .roi-field-head{ display:flex; justify-content: space-between; align-items: baseline; gap: 16px;}
+  .roi-field label{ font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);}
+  .roi-field .value{ font-family: var(--display); font-weight: 600; font-size: 22px; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+  .roi-slider{
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 2px; background: var(--line-strong); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  .roi-slider::-webkit-slider-thumb{
+    -webkit-appearance: none; appearance: none;
+    width: 18px; height: 18px; background: var(--accent); border-radius: 50%;
+    box-shadow: 0 0 0 4px rgba(31,169,245,.18), 0 0 12px rgba(31,169,245,.45);
+    cursor: pointer; transition: transform .12s;
+  }
+  .roi-slider::-webkit-slider-thumb:hover{ transform: scale(1.15); }
+  .roi-slider::-moz-range-thumb{
+    width: 18px; height: 18px; background: var(--accent); border-radius: 50%; border: 0;
+    box-shadow: 0 0 0 4px rgba(31,169,245,.18), 0 0 12px rgba(31,169,245,.45);
+    cursor: pointer;
+  }
+  .roi-result{
+    background: linear-gradient(180deg, rgba(31,169,245,.10), rgba(31,169,245,.02));
+    border: 1px solid rgba(31,169,245,.32);
+    border-radius: 14px;
+    padding: 28px;
+    display:flex; flex-direction: column; gap: 14px;
+    position: relative; overflow: hidden;
+  }
+  .roi-result::before{
+    content:""; position: absolute; inset: 0;
+    background: radial-gradient(60% 90% at 100% 0%, rgba(91,208,255,.14), transparent 60%);
+    pointer-events: none;
+  }
+  .roi-result > *{ position: relative; }
+  .roi-result-label{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--accent-2); display:flex; align-items: center; gap: 8px;
+  }
+  .roi-result-label::before{ content:""; width: 6px; height: 6px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 6px var(--ok);}
+  .roi-result-big{
+    font-family: var(--display); font-weight: 600;
+    font-size: clamp(40px, 5vw, 64px); line-height: 1; letter-spacing: -.03em;
+    color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .roi-result-sub{ font-family: var(--mono); font-size: 12px; letter-spacing: .06em; color: var(--steel); }
+  .roi-breakdown{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    margin-top: 4px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .roi-breakdown .lbl{ font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px;}
+  .roi-breakdown .val{ font-family: var(--display); font-weight: 600; font-size: 22px; color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -.01em;}
+  .roi-assumptions{ margin-top: 4px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.08); }
+  .roi-assumptions h5{ font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; font-weight: 500;}
+  .roi-assumptions ul{ list-style: none; padding: 0; margin: 0; display:flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--steel);}
+  .roi-assumptions li::before{ content: "+"; color: var(--accent-2); font-family: var(--mono); margin-right: 8px;}
+  .roi-disclaimer{ font-size: 12px; color: var(--muted); line-height: 1.55;}
+  .roi-result .btn{ align-self: flex-start; margin-top: 4px;}
+
+  /* ---------- Partners strip (In ontwikkeling met) ---------- */
+  .partners{
+    margin-top: 88px;
+    display:grid; grid-template-columns: 1fr repeat(3, 1fr);
+    border: 1px solid var(--line); border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  }
+  @media(max-width:760px){ .partners{ grid-template-columns: 1fr 1fr; } }
+  .partner-cell{
+    padding: 30px 24px; border-right: 1px solid var(--line);
+    display:flex; align-items: center; justify-content: center; min-height: 110px; text-align: center;
+  }
+  .partner-cell:last-child{ border-right: none; }
+  @media(max-width:760px){
+    .partner-cell{ border-right: none; border-bottom: 1px solid var(--line); }
+    .partner-cell:nth-child(2n){ border-right: none; }
+    .partner-cell:nth-last-child(-n+2){ border-bottom: none; }
+    .partner-cell:nth-child(odd){ border-right: 1px solid var(--line); }
+  }
+  .partner-cell.label{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); justify-content: flex-start; padding-left: 32px; gap: 10px;
+  }
+  .partner-cell.label::before{ content:""; width: 18px; height: 1px; background: var(--accent);}
+  @media(max-width:760px){ .partner-cell.label{ justify-content: center; padding-left: 24px; } }
+  .partner-cell strong{ font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -.015em; color: var(--text); }
+  .partner-cell .placeholder-label{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: var(--dim);
+    padding: 10px 16px; border: 1px dashed var(--line-strong); border-radius: 6px;
+  }
+
+  /* ---------- System gallery ---------- */
+  .system{ padding: 120px 0; }
+  .gallery-grid{
+    margin-top: 56px;
+    display:grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    grid-template-rows: 280px 280px;
+    gap: 14px;
+  }
+  @media(max-width:900px){
+    .gallery-grid{ grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, 240px); }
+  }
+  @media(max-width:560px){ .gallery-grid{ grid-template-columns: 1fr; grid-template-rows: repeat(5, 220px); } }
+  .gallery-item{
+    position: relative; border: 1px solid var(--line); border-radius: 14px;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,255,255,.022) 0 12px, rgba(255,255,255,0) 12px 24px),
+      linear-gradient(180deg, var(--surface), var(--surface-2));
+    overflow: hidden;
+    display:flex; align-items: flex-end; justify-content: flex-start;
+    padding: 22px;
+    transition: border-color .2s;
+  }
+  .gallery-item:hover{ border-color: var(--line-strong); }
+  .gallery-item.feature{ grid-row: span 2; }
+  @media(max-width:900px){ .gallery-item.feature{ grid-row: span 1; grid-column: span 2; } }
+  @media(max-width:560px){ .gallery-item.feature{ grid-column: span 1; } }
+  .gallery-item .corner{
+    position: absolute; top: 16px; left: 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); display:inline-flex; align-items: center; gap: 8px;
+  }
+  .gallery-item .corner::before{ content:""; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 6px var(--accent);}
+  .gallery-item .meta{
+    position: absolute; top: 16px; right: 16px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: var(--dim);
+  }
+  .gallery-item .placeholder{
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; color: var(--dim);
+    border: 1px dashed var(--line-strong); padding: 10px 16px; border-radius: 6px;
+    white-space: nowrap;
+  }
+  .gallery-item .scan{
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(31,169,245,.04) 50%, transparent 100%);
+    pointer-events: none;
+  }
+  .gallery-item .caption{ position: relative; z-index: 1; }
+  .gallery-item .caption .lbl{ font-family: var(--mono); font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2); margin-bottom: 6px;}
+  .gallery-item .caption .ttl{ font-family: var(--display); font-weight: 600; font-size: 20px; letter-spacing: -.01em; color: var(--text); }
+  .gallery-item .caption .sub{ font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 6px; max-width: 36ch; }
+
   /* ---------- Compliance ---------- */
   .compliance{ padding: 120px 0; }
   .badges{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 56px;}
@@ -885,6 +1052,66 @@
   .cta-form button{ margin-top: 4px;}
   .cta-form .hint{ font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: .08em;}
 
+  /* ---------- Contact people ---------- */
+  .people{
+    display:grid; grid-template-columns: 1fr; gap: 0;
+    border-top: 1px solid var(--line);
+    margin-top: 8px;
+  }
+  .person{
+    display:grid; grid-template-columns: 64px 1fr auto; gap: 18px;
+    padding: 22px 0; align-items: center;
+    border-bottom: 1px solid var(--line);
+    transition: padding-left .2s;
+  }
+  .person:hover{ padding-left: 6px; }
+  .person .avatar{
+    width: 56px; height: 56px;
+    background: linear-gradient(180deg, rgba(31,169,245,.14), rgba(31,169,245,.04));
+    border: 1px solid rgba(31,169,245,.28);
+    border-radius: 50%;
+    display:flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: -.01em;
+    color: var(--accent-2);
+  }
+  .person .info{ display:flex; flex-direction: column; gap: 3px; min-width: 0;}
+  .person .info .role{
+    font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .person .info .name{
+    font-family: var(--display); font-weight: 600; font-size: 19px; letter-spacing: -.01em; color: var(--text);
+  }
+  .person .info .email{
+    color: var(--steel); font-size: 14px; font-family: var(--mono); letter-spacing: .01em;
+    transition: color .15s; word-break: break-all;
+  }
+  .person .info .email:hover{ color: var(--accent-2); }
+  .person .arrow-btn{
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 1px solid var(--line-strong); background: transparent;
+    display:inline-flex; align-items: center; justify-content: center;
+    color: var(--text); font-size: 18px;
+    transition: background .15s, border-color .15s, color .15s;
+    flex-shrink: 0;
+  }
+  .person .arrow-btn:hover{ background: var(--accent); border-color: var(--accent); color: #000; }
+
+  .address-block{
+    display:grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px;
+    padding: 26px 0 4px; margin-top: 6px;
+    border-top: 1px solid var(--line);
+  }
+  @media(max-width:560px){ .address-block{ grid-template-columns: 1fr; gap: 18px; } }
+  .address-block .lbl{
+    font-family: var(--mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .address-block .val{
+    font-family: var(--display); font-weight: 500; font-size: 15px; color: var(--text); line-height: 1.5;
+  }
+  .address-block .val.mono{ font-family: var(--mono); letter-spacing: .04em; font-weight: 400; }
+
   /* ---------- Footer ---------- */
   footer{
     border-top: 1px solid var(--line);
@@ -947,7 +1174,7 @@
 <!-- LANGUAGE BAR -->
 <div class="langbar" role="region" aria-label="Taal / Language / Sprache">
   <div class="langbar-inner">
-    <span class="langbar-tag" data-i18n="lb_tag">Stepguard B.V. voorspellend roltrap-toezicht uit Nederland</span>
+    <span class="langbar-tag" data-i18n="lb_tag">Stepguard B.V. — voorspellend roltrap-toezicht uit Nederland</span>
     <div class="langbar-pick" id="siteLang" role="group" aria-label="Site language">
       <button data-lang="nl" class="on" aria-label="Nederlands">
         <span class="flag" aria-hidden="true"><svg viewBox="0 0 6 4" preserveAspectRatio="none"><rect width="6" height="4" fill="#21468B"/><rect width="6" height="2.667" fill="#FFFFFF"/><rect width="6" height="1.333" fill="#AE1C28"/></svg></span>
@@ -975,8 +1202,10 @@
     <div class="nav-links">
       <a href="#product" data-i18n="nav_product">Product</a>
       <a href="#how" data-i18n="nav_how">Technologie</a>
+      <a href="#system" data-i18n="nav_system">Systeem</a>
       <a href="#platform" data-i18n="nav_platform">Platform</a>
       <a href="#industries" data-i18n="nav_industries">Sectoren</a>
+      <a href="#roi-calc" data-i18n="nav_roi">Bereken</a>
       <a href="#compliance" data-i18n="nav_compliance">Compliance</a>
       <a href="#sustainability">Duurzaamheid</a>
       <a href="#contact" data-i18n="nav_company">Bedrijf</a>
@@ -996,11 +1225,11 @@
         <span class="eyebrow"><span class="pulse"></span><span data-i18n="hero_eyebrow">Voorspellend toezicht voor roltrappen &nbsp;·&nbsp; CE-conforme add-on</span></span>
         <h1 class="display">
           <span data-i18n="hero_h1_a">Zie slijtage</span><br/>
-          <span class="strike" data-i18n="hero_h1_b">voordat het</span><br/>
+          <span data-i18n="hero_h1_b">voordat het</span><br/>
           <span class="accent" data-i18n="hero_h1_c">u stopt.</span>
         </h1>
         <p class="lede" data-i18n="hero_lede" data-i18n-html="1">
-          Stepguard is een AI-vision sensor en asset-managementplatform dat elke trede van een roltrap in real-time bewaakt  slijtage, schade en onveilige situaties worden <em>weken</em> voordat een trede faalt gesignaleerd. Gebouwd voor operators die zich geen stilstand kunnen veroorloven.
+          Stepguard is een AI-vision sensor en asset-managementplatform dat elke trede van een roltrap in real-time bewaakt — slijtage, schade en onveilige situaties worden <em>weken</em> voordat een trede faalt gesignaleerd. Gebouwd voor operators die zich geen stilstand kunnen veroorloven.
         </p>
         <div class="hero-ctas">
           <a href="#contact" class="btn btn-primary btn-arrow" data-i18n="hero_cta_demo">Boek een demo van 20 min&nbsp;</a>
@@ -1117,13 +1346,13 @@
     <div class="quote reveal">
       <div>
         <div class="section-eyebrow" data-i18n="prob_eyebrow">De prijs van een gemiste trede</div>
-        <h2 class="section-title" data-i18n="prob_title" data-i18n-html="1">Roltrappen falen op het slechtst denkbare moment en de rekening komt <em>achteraf</em>.</h2>
+        <h2 class="section-title" data-i18n="prob_title" data-i18n-html="1">Roltrappen falen op het slechtst denkbare moment — en de rekening komt <em>achteraf</em>.</h2>
       </div>
       <div>
         <div class="news-card">
           <div class="date" data-i18n="prob_news_date">12 maart 2026 · Berlijn</div>
           <h4 data-i18n="prob_news_title">50+ roltrappen vielen uit op Berlin Hauptbahnhof op één dag.</h4>
-          <p data-i18n="prob_news_body">Hoge passagiersstromen, verouderde treden, geen waarschuwing vooraf. Operators in heel Duitsland willen reactieve interventies vervangen door continue monitoring en de arbeidskosten maken dat onvermijdelijk.</p>
+          <p data-i18n="prob_news_body">Hoge passagiersstromen, verouderde treden, geen waarschuwing vooraf. Operators in heel Duitsland willen reactieve interventies vervangen door continue monitoring — en de arbeidskosten maken dat onvermijdelijk.</p>
           <div class="src" data-i18n="prob_news_src">Bronnen: rbb24.de · Euronews · ELA Statistical Data 2022</div>
         </div>
       </div>
@@ -1137,7 +1366,7 @@
     <div class="reveal">
       <div class="section-eyebrow" data-i18n="how_eyebrow">Hoe het werkt</div>
       <h2 class="section-title" data-i18n="how_title">Vier lagen tussen een versleten trede en een gevallen passagier.</h2>
-      <p class="section-lede" data-i18n="how_lede">Eén verzegelde sensorunit, onder de roltrap gemonteerd, bekijkt elke trede die boven hem voorbij komt. Van ruwe beelden tot bruikbare melding in minder dan een seconde zonder wijzigingen aan de roltrap en zonder verstoring van het bestaande onderhoudscontract.</p>
+      <p class="section-lede" data-i18n="how_lede">Eén verzegelde sensorunit, onder de roltrap gemonteerd, bekijkt elke trede die boven hem voorbij komt. Van ruwe beelden tot bruikbare melding in minder dan een seconde — zonder wijzigingen aan de roltrap en zonder verstoring van het bestaande onderhoudscontract.</p>
     </div>
 
     <div class="grid-4">
@@ -1154,7 +1383,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h3l2-7 4 14 2-7h7"/></svg>
         </span></div>
         <h3 data-i18n="how_f2_title">AI-vision slijtagemodel</h3>
-        <p data-i18n="how_f2_body">Getraind op duizenden uren echte Nederlandse en Duitse roltrap-beelden. Herkent scheuren in treden, randslijtage, plaat-misalignment en losse voorwerpen over merken en stations heen.</p>
+        <p data-i18n="how_f2_body">Getraind op duizenden uren echte Nederlandse en Duitse roltrap-beelden. Herkent scheuren in treden, randslijtage, plaat-misalignment en losse voorwerpen — over merken en stations heen.</p>
         <div class="spec"><span data-i18n="how_f2_s1">Patent aangevraagd</span><span data-i18n="how_f2_s2">On-prem inferentie</span></div>
       </div>
       <div class="feature reveal">
@@ -1162,7 +1391,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 22h20z"/><line x1="12" y1="10" x2="12" y2="15"/><circle cx="12" cy="18" r="1" fill="currentColor"/></svg>
         </span></div>
         <h3 data-i18n="how_f3_title">Alarm in vier niveaus</h3>
-        <p data-i18n="how_f3_body">Iedere gebeurtenis krijgt een score van een routinemelding tot een stop-de-roltrap-noodgeval. Drempels per locatie, per operator en per dienst instelbaar vals alarm blijft buiten de wachtrij.</p>
+        <p data-i18n="how_f3_body">Iedere gebeurtenis krijgt een score van een routinemelding tot een stop-de-roltrap-noodgeval. Drempels per locatie, per operator en per dienst instelbaar — vals alarm blijft buiten de wachtrij.</p>
         <div class="spec"><span data-i18n="how_f3_s1">L1-melding → L4-stop</span><span data-i18n="how_f3_s2">Operator-afstelbaar</span></div>
       </div>
       <div class="feature reveal">
@@ -1177,13 +1406,82 @@
   </div>
 </section>
 
+<!-- SYSTEM GALLERY -->
+<section class="system" id="system">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="section-eyebrow" data-i18n="sys_eyebrow">Het Stepguard-systeem</div>
+      <h2 class="section-title" data-i18n="sys_title">Verzegelde hardware. Bewezen montage. Onzichtbaar in dienst.</h2>
+      <p class="section-lede" data-i18n="sys_lede">Een industriële sensorbox, gekalibreerd in onze werkplaats, onder de roltrap gemonteerd op de servicekant — buiten zicht van passagiers. Hieronder een impressie van de eenheid, montage en bekabeling. Foto's volgen na de eerste veldinstallaties.</p>
+    </div>
+
+    <div class="gallery-grid reveal">
+      <div class="gallery-item feature">
+        <span class="corner" data-i18n="sys_g1_corner">SG-01 · Sensorbox</span>
+        <span class="meta">01 / 05</span>
+        <span class="placeholder" data-i18n="sys_g1_ph">/foto · sensor-unit-front.jpg</span>
+        <span class="scan"></span>
+        <div class="caption">
+          <div class="lbl" data-i18n="sys_g1_lbl">Hardware</div>
+          <div class="ttl" data-i18n="sys_g1_ttl">Verzegelde sensorunit</div>
+          <div class="sub" data-i18n="sys_g1_sub">IP65, geanodiseerd aluminium, edge-AI module. Werkplaats-gekalibreerd vóór levering.</div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <span class="corner" data-i18n="sys_g2_corner">SG-02 · Montage</span>
+        <span class="meta">02 / 05</span>
+        <span class="placeholder" data-i18n="sys_g2_ph">/foto · onder-de-roltrap.jpg</span>
+        <span class="scan"></span>
+        <div class="caption">
+          <div class="lbl" data-i18n="sys_g2_lbl">In-situ</div>
+          <div class="ttl" data-i18n="sys_g2_ttl">Onder de tredenketting</div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <span class="corner" data-i18n="sys_g3_corner">SG-03 · Optiek</span>
+        <span class="meta">03 / 05</span>
+        <span class="placeholder" data-i18n="sys_g3_ph">/foto · camera-optiek.jpg</span>
+        <span class="scan"></span>
+        <div class="caption">
+          <div class="lbl" data-i18n="sys_g3_lbl">Vision</div>
+          <div class="ttl" data-i18n="sys_g3_ttl">Industriële cameramodule</div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <span class="corner" data-i18n="sys_g4_corner">SG-04 · Bekabeling</span>
+        <span class="meta">04 / 05</span>
+        <span class="placeholder" data-i18n="sys_g4_ph">/foto · kabeldoorvoer.jpg</span>
+        <span class="scan"></span>
+        <div class="caption">
+          <div class="lbl" data-i18n="sys_g4_lbl">Installatie</div>
+          <div class="ttl" data-i18n="sys_g4_ttl">PoE-aansluiting · 1 kabel</div>
+        </div>
+      </div>
+
+      <div class="gallery-item">
+        <span class="corner" data-i18n="sys_g5_corner">SG-05 · Installatie</span>
+        <span class="meta">05 / 05</span>
+        <span class="placeholder" data-i18n="sys_g5_ph">/foto · montage-team.jpg</span>
+        <span class="scan"></span>
+        <div class="caption">
+          <div class="lbl" data-i18n="sys_g5_lbl">Veld</div>
+          <div class="ttl" data-i18n="sys_g5_ttl">Montage in &lt; 2 uur</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- PLATFORM PREVIEW -->
 <section class="platform" id="platform">
   <div class="wrap">
     <div class="reveal">
       <div class="section-eyebrow" data-i18n="pf_eyebrow">Het Stepguard-platform</div>
       <h2 class="section-title" data-i18n="pf_title">Een controleruimte voor iedere roltrap die u beheert.</h2>
-      <p class="section-lede" id="platform-lede" data-i18n="pf_lede">Zeven dedicated pagina's hieronder live ingebed. Klik op een menupunt, wissel de taal, filter alarmen op ernst, open een incident. De knoppen werken echt.</p>
+      <p class="section-lede" id="platform-lede" data-i18n="pf_lede">Zeven dedicated pagina's — hieronder live ingebed. Klik op een menupunt, wissel de taal, filter alarmen op ernst, open een incident. De knoppen werken echt.</p>
     </div>
 
     <div class="platform-shell reveal" id="pfShell">
@@ -1246,7 +1544,7 @@
         </div>
         <div>
           <h4 data-i18n="ind_1_h">Openbaar vervoer</h4>
-          <p class="desc" data-i18n="ind_1_p">MVG, BVG, FVG, Deutsche Bahn, NS. Netwerken die honderden roltrappen onder continue belasting draaien. </p>
+          <p class="desc" data-i18n="ind_1_p">MVG, BVG, FVG, Deutsche Bahn, NS. Netwerken die honderden roltrappen onder continue belasting draaien. Alleen MVG beheert er 772.</p>
           <div class="tag" data-i18n="ind_1_t">→ Ankersegment</div>
         </div>
       </div>
@@ -1296,7 +1594,7 @@
         </div>
         <div>
           <h4 data-i18n="ind_4_h">Stadions &amp; venues</h4>
-          <p class="desc" data-i18n="ind_4_p">Messe Berlin, München, Frankfurt. Geconcentreerde uitstroommomenten als 40.000 mensen tegelijk naar buiten gaan, wordt een stilstaande roltrap een veiligheids­incident.</p>
+          <p class="desc" data-i18n="ind_4_p">Messe Berlin, München, Frankfurt. Geconcentreerde uitstroommomenten — als 40.000 mensen tegelijk naar buiten gaan, wordt een stilstaande roltrap een veiligheids­incident.</p>
           <div class="tag" data-i18n="ind_4_t">→ Crowd flow</div>
         </div>
       </div>
@@ -1310,38 +1608,112 @@
     <div class="roi-grid">
       <div class="reveal">
         <div class="section-eyebrow" data-i18n="roi_eyebrow">De economische kant</div>
-        <h2 class="section-title" data-i18n="roi_title">Terugverdiend vanaf de eerste voorkomen storing.</h2>
-        <p class="section-lede" data-i18n="roi_lede" data-i18n-html="1">Een spoedvervanging van een trede kost tot <strong style="color:var(--text)">€80.000</strong> aan materiaal alleen — exclusief stilstand, gederfde ticketinkomsten, monteur-overuren of SLA-boetes. Stepguard pikt het slijtagepatroon weken eerder op en maakt er een geplande klus overdag van.</p>
+        <h2 class="section-title" data-i18n="roi_title">Eén vaste hardware-prijs. Geen verborgen kosten.</h2>
+        <p class="section-lede" data-i18n="roi_lede" data-i18n-html="1">Stepguard is een eenmalige investering per roltrap, inclusief sensorbox, edge-AI, installatie en kalibratie. Géén abonnement op de hardware, géén nacalculatie. Wat Stepguard u <em>terugverdient</em> ziet u in de rekenmodule hieronder.</p>
         <div style="margin-top:32px; display:flex; gap:14px; flex-wrap: wrap;">
-          <a href="#contact" class="btn btn-primary btn-arrow" data-i18n="roi_cta_1">Bereken uw ROI&nbsp;</a>
+          <a href="#roi-calc" class="btn btn-primary btn-arrow" data-i18n="roi_cta_1">Bereken uw ROI&nbsp;</a>
           <a href="#compliance" class="btn btn-ghost" data-i18n="roi_cta_2">Compliance-brief bekijken</a>
         </div>
       </div>
-      <div class="compare reveal">
+      <div class="compare reveal" style="grid-template-columns: 1fr;">
         <div class="col good">
-          <div class="tag" data-i18n="roi_good_tag">Met Stepguard</div>
-          <div class="price">€32k</div>
-          <div class="sub" data-i18n="roi_good_sub" data-i18n-html="1">Eenmalig per roltrap<br/>+ €1.000 / jaar software</div>
+          <div class="tag" data-i18n="roi_price_tag">Hardware · per roltrap</div>
+          <div class="price">€32.000</div>
+          <div class="sub" data-i18n="roi_price_sub" data-i18n-html="1">Eenmalig, all-in<br/>+ €1.000 / jaar platform-licentie</div>
           <div class="li">
-            <span><span class="mk">+</span> <span data-i18n="roi_good_1">Detecteert slijtage weken vooraf</span></span>
-            <span><span class="mk">+</span> <span data-i18n="roi_good_2">Gepland onderhoud, overdag</span></span>
-            <span><span class="mk">+</span> <span data-i18n="roi_good_3">Real-time vlootindicatoren</span></span>
-            <span><span class="mk">+</span> <span data-i18n="roi_good_4">Trede-levensduur verlengd</span></span>
-          </div>
-        </div>
-        <div class="col bad">
-          <div class="tag" data-i18n="roi_bad_tag">Reactief herstel</div>
-          <div class="price" style="color:var(--hot)">€80k+</div>
-          <div class="sub" data-i18n="roi_bad_sub" data-i18n-html="1">Per noodgeval, alleen materiaal<br/>excl. stilstand en SLA-boetes</div>
-          <div class="li">
-            <span><span class="mk">×</span> <span data-i18n="roi_bad_1">Trede-breuk met passagiers aan boord</span></span>
-            <span><span class="mk">×</span> <span data-i18n="roi_bad_2">Monteur-dispatch buiten kantooruren</span></span>
-            <span><span class="mk">×</span> <span data-i18n="roi_bad_3">1–3 weken buiten dienst</span></span>
-            <span><span class="mk">×</span> <span data-i18n="roi_bad_4">Aansprakelijkheids- en reputatieschade</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_price_1">Verzegelde sensorunit (IP65)</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_price_2">Edge-AI module, werkplaats-gekalibreerd</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_price_3">Montage in &lt; 2 uur per roltrap</span></span>
+            <span><span class="mk">+</span> <span data-i18n="roi_price_4">Inclusief 24 maanden garantie</span></span>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Interactive ROI calculator -->
+    <div class="roi-calc reveal" id="roi-calc">
+      <div class="roi-calc-head">
+        <h3 data-i18n="roi_calc_title">Bereken uw jaarlijkse besparing.</h3>
+        <span class="tag" data-i18n="roi_calc_tag">Live · Indicatief</span>
+      </div>
+      <div class="roi-inputs">
+        <div class="roi-field">
+          <div class="roi-field-head">
+            <label for="roi-escalators" data-i18n="roi_in_esc">Aantal roltrappen</label>
+            <span class="value" id="roi-escalators-val">10</span>
+          </div>
+          <input class="roi-slider" type="range" id="roi-escalators" min="1" max="100" step="1" value="10" />
+        </div>
+        <div class="roi-field">
+          <div class="roi-field-head">
+            <label for="roi-downtime" data-i18n="roi_in_dt">Uitval-uren per jaar (per roltrap)</label>
+            <span class="value" id="roi-downtime-val">40 u</span>
+          </div>
+          <input class="roi-slider" type="range" id="roi-downtime" min="0" max="200" step="5" value="40" />
+        </div>
+        <div class="roi-field">
+          <div class="roi-field-head">
+            <label for="roi-downtime-cost" data-i18n="roi_in_dtc">Kosten per uur uitval (€)</label>
+            <span class="value" id="roi-downtime-cost-val">€ 450</span>
+          </div>
+          <input class="roi-slider" type="range" id="roi-downtime-cost" min="50" max="2000" step="50" value="450" />
+        </div>
+        <div class="roi-field">
+          <div class="roi-field-head">
+            <label for="roi-steps" data-i18n="roi_in_st">Treden vervangen per jaar (totaal)</label>
+            <span class="value" id="roi-steps-val">80</span>
+          </div>
+          <input class="roi-slider" type="range" id="roi-steps" min="0" max="500" step="10" value="80" />
+        </div>
+        <div class="roi-field">
+          <div class="roi-field-head">
+            <label for="roi-step-cost" data-i18n="roi_in_stc">Kosten per trede (€)</label>
+            <span class="value" id="roi-step-cost-val">€ 600</span>
+          </div>
+          <input class="roi-slider" type="range" id="roi-step-cost" min="100" max="1500" step="50" value="600" />
+        </div>
+      </div>
+
+      <div class="roi-result">
+        <div class="roi-result-label" data-i18n="roi_out_label">Geschatte jaarlijkse besparing</div>
+        <div class="roi-result-big" id="roi-total">€ 0</div>
+        <div class="roi-result-sub" id="roi-per-escalator">€ 0 / roltrap / jaar</div>
+
+        <div class="roi-breakdown">
+          <div>
+            <div class="lbl" data-i18n="roi_out_dt">Bespaard op uitval</div>
+            <div class="val" id="roi-downtime-savings">€ 0</div>
+          </div>
+          <div>
+            <div class="lbl" data-i18n="roi_out_st">Bespaard op trede-vervanging</div>
+            <div class="val" id="roi-step-savings">€ 0</div>
+          </div>
+        </div>
+
+        <div class="roi-assumptions">
+          <h5 data-i18n="roi_out_assum">Aannames</h5>
+          <ul>
+            <li data-i18n="roi_assum_1" data-i18n-html="1">Uitval-reductie met Stepguard: <strong style="color:var(--text)">70%</strong></li>
+            <li data-i18n="roi_assum_2" data-i18n-html="1">Reductie ongeplande trede-vervanging: <strong style="color:var(--text)">50%</strong></li>
+          </ul>
+        </div>
+
+        <p class="roi-disclaimer" data-i18n="roi_disclaimer">
+          Indicatieve berekening. Werkelijke besparing varieert per locatie, type roltrap en gebruikspatroon. We rekenen graag met u door op uw eigen cijfers.
+        </p>
+
+        <a class="btn btn-primary btn-arrow" href="#contact" data-i18n="roi_calc_cta">Plan een persoonlijke berekening&nbsp;</a>
+      </div>
+    </div>
+
+    <!-- In ontwikkeling met -->
+    <div class="partners reveal">
+      <div class="partner-cell label" data-i18n="partners_label">In ontwikkeling met</div>
+      <div class="partner-cell"><strong>NS Stations</strong></div>
+      <div class="partner-cell"><span class="placeholder-label" data-i18n="partner_pl">/partner-logo</span></div>
+      <div class="partner-cell"><span class="placeholder-label" data-i18n="partner_pl">/partner-logo</span></div>
+    </div>
+
   </div>
 </section>
 
@@ -1350,7 +1722,7 @@
   <div class="wrap">
     <div class="reveal">
       <div class="section-eyebrow" data-i18n="comp_eyebrow">Gebouwd voor Europese infrastructuur</div>
-      <h2 class="section-title" data-i18n="comp_title">Conform-by-design geen retrofit.</h2>
+      <h2 class="section-title" data-i18n="comp_title">Conform-by-design — geen retrofit.</h2>
       <p class="section-lede" data-i18n="comp_lede">Stepguard wordt geïnstalleerd als monitoring add-on. De roltrap zelf wordt nooit aangepast. Daarmee blijft de bestaande CE-verklaring intact en is de route met TÜV, BDSG en de relevante toezichthouders helder.</p>
     </div>
 
@@ -1431,13 +1803,60 @@
   </div>
 </section>
 
-<!-- CTA -->
+<!-- CONTACT -->
 <section class="cta" id="contact">
-  <div class="cta-grid">
+  <div class="cta-grid" style="align-items: flex-start;">
     <div>
-      <h2 data-i18n="cta_title">Draai een pilot op drie roltrappen. Zie het verschil binnen 90 dagen.</h2>
-      <p data-i18n="cta_body">We rollen pilots uit met OV-operators in heel DACH en Nederland. Vertel ons over uw netwerk en wij komen binnen twee werkdagen terug met een afgebakende pilot gereduceerde hardware, prestatie-gebonden pricing, volledige referentie-build.</p>
+      <div class="section-eyebrow" data-i18n="contact_eyebrow" style="margin-bottom:18px;">Praat met ons</div>
+      <h2 data-i18n="contact_title">Mail rechtstreeks met de juiste persoon.</h2>
+      <p data-i18n="contact_lede">Wilt u weten wat Stepguard voor uw roltrappen kan betekenen? Stuur direct een bericht naar de juiste persoon, of vul rechts het formulier in — we reageren binnen twee werkdagen.</p>
+
+      <div class="people">
+        <div class="person">
+          <div class="avatar" aria-hidden="true">W</div>
+          <div class="info">
+            <span class="role" data-i18n="contact_role_sales">Verkoop</span>
+            <span class="name">Willem van der Heijden</span>
+            <a class="email" href="mailto:willem@stepguard.nl">willem@stepguard.nl</a>
+          </div>
+          <a class="arrow-btn" href="mailto:willem@stepguard.nl" aria-label="Mail Willem">→</a>
+        </div>
+        <div class="person">
+          <div class="avatar" aria-hidden="true">G</div>
+          <div class="info">
+            <span class="role" data-i18n="contact_role_planning">Planning</span>
+            <span class="name">Gertjan van den Bogaert</span>
+            <a class="email" href="mailto:gertjan@stepguard.nl">gertjan@stepguard.nl</a>
+          </div>
+          <a class="arrow-btn" href="mailto:gertjan@stepguard.nl" aria-label="Mail Gertjan">→</a>
+        </div>
+        <div class="person">
+          <div class="avatar" aria-hidden="true">D</div>
+          <div class="info">
+            <span class="role" data-i18n="contact_role_tech">Techniek</span>
+            <span class="name">Daniël Telgen</span>
+            <a class="email" href="mailto:daniel@stepguard.nl">daniel@stepguard.nl</a>
+          </div>
+          <a class="arrow-btn" href="mailto:daniel@stepguard.nl" aria-label="Mail Daniël">→</a>
+        </div>
+      </div>
+
+      <div class="address-block">
+        <div>
+          <div class="lbl" data-i18n="contact_addr_lbl">Adres</div>
+          <div class="val">Loverensestraat 31<br/>5266&nbsp;AN Cromvoirt<br/>Nederland</div>
+        </div>
+        <div>
+          <div class="lbl" data-i18n="contact_kvk_lbl">KvK</div>
+          <div class="val mono">42054745</div>
+        </div>
+        <div>
+          <div class="lbl" data-i18n="contact_company_lbl">Bedrijf</div>
+          <div class="val">Stepguard B.V.</div>
+        </div>
+      </div>
     </div>
+
     <form class="cta-form" data-i18n-form="1" onsubmit="event.preventDefault(); this.querySelector('button').textContent = (window.__i18n_t ? window.__i18n_t('cta_thanks') : 'Bedankt — we nemen contact op'); this.querySelector('button').disabled=true;">
       <div class="row2">
         <input type="text" data-i18n-ph="cta_ph_name" placeholder="Voornaam" required />
@@ -1459,7 +1878,7 @@
         <span class="brand-mark"><img src="assets/logo.jpeg" alt="" /></span>
         <span class="brand-name">step<b>guard</b></span>
       </a>
-      <p data-i18n="foot_blurb">Stepguard B.V. een Cboost spin-off. Voorspellend roltrap-toezicht, gebouwd in Nederland, uitgerold in heel Europa. Patent aangevraagd.</p>
+      <p data-i18n="foot_blurb">Stepguard B.V. — een Cboost spin-off. Voorspellend roltrap-toezicht, gebouwd in Nederland, uitgerold in heel Europa. Patent aangevraagd.</p>
     </div>
     <div>
       <h6 data-i18n="foot_h_product">Product</h6>
@@ -1676,6 +2095,7 @@
     });
     // Re-paint the ticker in the selected language
     if (typeof window.__tickerPaint === 'function') window.__tickerPaint(lang);
+    if (typeof window.__roiRecompute === 'function') window.__roiRecompute();
     try { localStorage.setItem('sg_site_lang', lang); } catch(_){}
   }
   window.__i18n_t = (k) => {
@@ -2516,6 +2936,64 @@
     render();
   })();
 
+  // ---- ROI Calculator ----
+  (function roiCalc(){
+    const DOWNTIME_REDUCTION = 0.70;
+    const STEP_REPLACE_REDUCTION = 0.50;
+    const FMT = {
+      nl: { currency: (n)=> '€ ' + Math.round(n).toLocaleString('nl-NL'), number: (n)=> n.toLocaleString('nl-NL'), hour:' u', per:' / roltrap / jaar' },
+      en: { currency: (n)=> '€ ' + Math.round(n).toLocaleString('en-GB'), number: (n)=> n.toLocaleString('en-GB'), hour:' h', per:' / escalator / year' },
+      de: { currency: (n)=> '€ ' + Math.round(n).toLocaleString('de-DE'), number: (n)=> n.toLocaleString('de-DE'), hour:' h', per:' / Rolltreppe / Jahr' }
+    };
+    const $ = (id)=> document.getElementById(id);
+    const inputs = {
+      escalators: $('roi-escalators'),
+      downtime: $('roi-downtime'),
+      downtimeCost: $('roi-downtime-cost'),
+      steps: $('roi-steps'),
+      stepCost: $('roi-step-cost')
+    };
+    if (!inputs.escalators) return;
+    const labels = {
+      escalators: $('roi-escalators-val'),
+      downtime: $('roi-downtime-val'),
+      downtimeCost: $('roi-downtime-cost-val'),
+      steps: $('roi-steps-val'),
+      stepCost: $('roi-step-cost-val')
+    };
+    function paintProgress(el){
+      const min = +el.min || 0, max = +el.max || 100, v = +el.value;
+      const pct = ((v - min) / (max - min)) * 100;
+      el.style.background = 'linear-gradient(to right, var(--accent) 0%, var(--accent) ' + pct + '%, var(--line-strong) ' + pct + '%, var(--line-strong) 100%)';
+    }
+    function recompute(){
+      const lang = document.documentElement.lang || 'nl';
+      const f = FMT[lang] || FMT.nl;
+      const esc = +inputs.escalators.value;
+      const dt = +inputs.downtime.value;
+      const dtc = +inputs.downtimeCost.value;
+      const st = +inputs.steps.value;
+      const stc = +inputs.stepCost.value;
+      labels.escalators.textContent = f.number(esc);
+      labels.downtime.textContent = f.number(dt) + f.hour;
+      labels.downtimeCost.textContent = f.currency(dtc);
+      labels.steps.textContent = f.number(st);
+      labels.stepCost.textContent = f.currency(stc);
+      const dtSav = esc * dt * dtc * DOWNTIME_REDUCTION;
+      const stSav = st * stc * STEP_REPLACE_REDUCTION;
+      const total = dtSav + stSav;
+      const per = esc > 0 ? total / esc : 0;
+      $('roi-total').textContent = f.currency(total);
+      $('roi-downtime-savings').textContent = f.currency(dtSav);
+      $('roi-step-savings').textContent = f.currency(stSav);
+      $('roi-per-escalator').textContent = f.currency(per) + f.per;
+      Object.values(inputs).forEach(paintProgress);
+    }
+    Object.values(inputs).forEach(el => el.addEventListener('input', recompute));
+    window.__roiRecompute = recompute;
+    recompute();
+  })();
+
   // ---- Reveal on scroll ----
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target);} });
@@ -2527,7 +3005,7 @@
 <script>
   // Persisted defaults. Host rewrites the block between EDITMODE markers when the user picks a theme.
   window.__SG_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-    "theme": "midnight"
+    "theme": "forest"
   }/*EDITMODE-END*/;
 
   // Apply persisted theme inline, before React mounts, so there is no flash.
